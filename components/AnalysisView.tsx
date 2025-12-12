@@ -293,91 +293,59 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
     }
   };
 
-  const handleExportExcel = () => {
-    // Advanced Excel Export: Shows ALL connections for every participant
-    // Format: Source Name | Source Company | Target Name | Target Company | Score | Reason
+  const handleExportCSV = () => {
+    const headers = [
+      "Nome (Origem)", "Empresa (Origem)", "Segmento (Origem)", 
+      "Nome (Destino)", "Empresa (Destino)", "Segmento (Destino)", 
+      "Score de Conexão", "Motivo da Sinergia"
+    ];
     
-    let tableContent = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/>
-        <style>
-          table { border-collapse: collapse; }
-          th { background-color: #10B981; color: white; border: 1px solid #ddd; padding: 10px; font-weight: bold; }
-          td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
-        </style>
-      </head>
-      <body>
-        <table>
-          <thead>
-            <tr>
-              <th>Nome (Origem)</th>
-              <th>Empresa (Origem)</th>
-              <th>Segmento (Origem)</th>
-              <th>Nome (Destino)</th>
-              <th>Empresa (Destino)</th>
-              <th>Segmento (Destino)</th>
-              <th>Score de Conexão</th>
-              <th>Motivo da Sinergia</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
+    let csvContent = headers.map(h => `"${h}"`).join(",") + "\n";
 
-    // Loop through all individual scores to get their recommended connections
     data.individualScores.forEach(sourceScore => {
       const sourceParticipant = getParticipant(sourceScore.participantId);
-      
       if (sourceParticipant) {
-        // If there are specific recommendations, list them
+        // Check if there are recommendations
         if (sourceScore.recommendedConnections && sourceScore.recommendedConnections.length > 0) {
           sourceScore.recommendedConnections.forEach(conn => {
             const targetParticipant = getParticipant(conn.partnerId);
             if (targetParticipant) {
-               tableContent += `
-                <tr>
-                  <td>${sourceParticipant.name}</td>
-                  <td>${sourceParticipant.company}</td>
-                  <td>${sourceParticipant.segment}</td>
-                  <td>${targetParticipant.name}</td>
-                  <td>${targetParticipant.company}</td>
-                  <td>${targetParticipant.segment}</td>
-                  <td style="text-align:center">${conn.score}</td>
-                  <td>${conn.reason}</td>
-                </tr>
-              `;
+               const row = [
+                 sourceParticipant.name,
+                 sourceParticipant.company,
+                 sourceParticipant.segment,
+                 targetParticipant.name,
+                 targetParticipant.company,
+                 targetParticipant.segment,
+                 conn.score.toString(),
+                 conn.reason
+               ].map(field => `"${(field || '').replace(/"/g, '""')}"`); // Escape quotes in content
+               csvContent += row.join(",") + "\n";
             }
           });
         } else {
-          // Row for participant with no specific high connections (just so they appear in the sheet)
-           tableContent += `
-              <tr>
-                <td>${sourceParticipant.name}</td>
-                <td>${sourceParticipant.company}</td>
-                <td>${sourceParticipant.segment}</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>Sem conexões diretas de alta prioridade identificadas.</td>
-              </tr>
-            `;
+            // Include participants with no high-value connections so they appear in the report
+             const row = [
+                 sourceParticipant.name,
+                 sourceParticipant.company,
+                 sourceParticipant.segment,
+                 "-",
+                 "-",
+                 "-",
+                 "-",
+                 "Sem conexões diretas de alta prioridade identificadas."
+             ].map(field => `"${(field || '').replace(/"/g, '""')}"`);
+             csvContent += row.join(",") + "\n";
         }
       }
     });
 
-    tableContent += `
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([tableContent], { type: 'application/vnd.ms-excel' });
+    // Add BOM for Excel UTF-8 compatibility
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "conexoes_rampup_in.xls";
+    link.download = "conexoes_rampup_in.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -447,7 +415,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <h2 className={`text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Dashboard de Conexões</h2>
             <button
-              onClick={handleExportExcel}
+              onClick={handleExportCSV}
               className={`self-start sm:self-auto flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg border shadow-sm transition-all hover:-translate-y-0.5 ${
                 isDarkMode 
                   ? 'bg-chumbo-800 border-gray-700 text-verde-light hover:bg-chumbo-900' 
@@ -455,7 +423,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
               }`}
             >
               <FileSpreadsheet className="w-3 h-3" />
-              Exportar Matriz Excel
+              Exportar para Planilha (CSV)
             </button>
           </div>
           <p className={`text-base mt-2 max-w-2xl ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{data.summary}</p>

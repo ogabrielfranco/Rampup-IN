@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AnalysisResult, LayoutFormat, Participant, IndividualScore } from '../types';
-import { LayoutDashboard, Users, User, ArrowRight, Grid, Monitor, Disc, Rows, RectangleHorizontal, Magnet, AlignJustify, Save, Filter, ChevronDown, Check } from 'lucide-react';
+import { LayoutDashboard, Users, User, ArrowRight, Grid, Monitor, Disc, Rows, RectangleHorizontal, Magnet, AlignJustify, Save, Filter, ChevronDown, Check, Image as ImageIcon } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 interface SeatingViewProps {
   data: AnalysisResult;
@@ -59,6 +60,7 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
   const [filterSegment, setFilterSegment] = useState<string>('');
   const [minScore, setMinScore] = useState<number>(0);
   const [showSavedToast, setShowSavedToast] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
 
   // Helper to get participant object
   const getParticipant = (id: string) => data.participants.find(p => p.id === id);
@@ -86,6 +88,29 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
     localStorage.setItem('rampup_saved_layout', selectedLayout);
     setShowSavedToast(true);
     setTimeout(() => setShowSavedToast(false), 2000);
+  };
+
+  const handleDownloadImage = async () => {
+    if (!mapRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(mapRef.current, {
+        scale: 2, // High definition
+        backgroundColor: isDarkMode ? '#1a202c' : '#ffffff', // Explicit background color to prevent transparency issues
+        useCORS: true,
+        logging: false
+      });
+      
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = `mapa_sala_${selectedLayout}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Failed to save image", err);
+    }
   };
 
   const renderVisualMap = () => {
@@ -164,17 +189,6 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         );
 
       case 'mesa_u':
-        // U Logic: To maintain adjacency (best connections next to each other), we flow:
-        // Left Column (Top down) -> Bottom/Center (Left to Right) -> Right Column (Bottom up)
-        // OR standard conference U: Left Col (Top to Bottom) -> Center (Left to Right) -> Right Col (Top to Bottom)
-        // Let's use standard visual flow: Start Left-Top -> Left-Bottom -> Center-Left -> Center-Right -> Right-Bottom -> Right-Top.
-        // Wait, standard U tables usually have a head.
-        // Let's map linear array to shape:
-        // Index 0..N/3 -> Left Side
-        // Index N/3..2N/3 -> Top Side (Head)
-        // Index 2N/3..N -> Right Side
-        // This keeps neighbors in the array adjacent in the room.
-
         const uTotal = linearParticipants.length;
         const uSideCount = Math.floor((uTotal - Math.floor(uTotal/2.5)) / 2); // Sides have fewer people usually
         const uTopCount = uTotal - (uSideCount * 2);
@@ -222,11 +236,7 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         );
 
       case 'mesa_t':
-        // T-Shape Logic:
-        // Top Bar (Horizontal) - Key people usually
-        // Vertical Leg - Extending down from center
         const tTotal = linearParticipants.length;
-        // Let's put roughly 40% on top, 60% on vertical leg
         const tTopCount = Math.max(4, Math.ceil(tTotal * 0.4)); 
         const tLegCount = tTotal - tTopCount;
 
@@ -267,10 +277,7 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         );
 
       case 'mesa_o':
-        // Correct O representation to ensure no overlaps and continuous flow
-        // Top -> Right -> Bottom -> Left
         const qTotal = linearParticipants.length;
-        // Divide as evenly as possible: Top/Bottom get slightly more if uneven
         const oSides = Math.floor(qTotal / 4);
         const oTop = Math.ceil((qTotal - (oSides * 2)) / 2);
         const oBottom = qTotal - (oSides * 2) - oTop;
@@ -392,6 +399,17 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                    {showSavedToast ? <Check className="w-3 h-3" /> : <Save className="w-3 h-3" />}
                    {showSavedToast ? 'Salvo!' : 'Salvar Layout'}
                 </button>
+                <button
+                   onClick={handleDownloadImage}
+                   className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg border shadow-sm transition-all ${
+                      isDarkMode 
+                      ? 'bg-chumbo-800 border-gray-700 text-verde-light hover:bg-chumbo-900' 
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                   }`}
+                >
+                   <ImageIcon className="w-3 h-3" />
+                   Salvar Imagem (PNG)
+                </button>
              </div>
           </div>
         </div>
@@ -473,7 +491,7 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
       </div>
 
       {/* Visualizer Area */}
-      <div className={`p-8 rounded-2xl border min-h-[500px] ${
+      <div ref={mapRef} className={`p-8 rounded-2xl border min-h-[500px] ${
         isDarkMode ? 'bg-chumbo-800/50 border-gray-800' : 'bg-gray-50 border-gray-200'
       }`}>
          <div className="flex justify-between items-center mb-8">
