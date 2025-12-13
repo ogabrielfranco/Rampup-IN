@@ -26,6 +26,7 @@ const analysisSchema: Schema = {
           company: { type: Type.STRING },
           segment: { type: Type.STRING },
           eventName: { type: Type.STRING },
+          isHost: { type: Type.BOOLEAN, description: "True if this participant is the Host." }
         },
         required: ["id", "name", "company", "segment"],
       },
@@ -99,53 +100,75 @@ const analysisSchema: Schema = {
 
 export const analyzeNetworkingData = async (rawData: string): Promise<AnalysisResult> => {
   const prompt = `
-    You are a Senior Strategic Business Connector and Networking Specialist.
-    Your task is to analyze a raw list of event participants and calculate the "Rampup IN" (Business Index).
-
-    **Goal:**
-    Identify real, actionable business opportunities. Do not just match similar keywords. Look for Supply Chain relationships, B2B Service opportunities, and Strategic Partnerships.
-
-    **Analysis Logic (The "Brain"):**
-    1. **Supply Chain (High Score 90-100%):** Does Person A sell what Person B needs to operate? (e.g., "Construction Company" needs "Cement Supplier").
-    2. **B2B Services (High/Med Score 70-90%):** Does Person A offer a service that Person B likely needs to grow? (e.g., "Marketing Agency" is valuable to "E-commerce" or "Real Estate").
-    3. **Complementary (Med Score 60-80%):** Do they serve the same client but don't compete? (e.g., "Wedding Planner" and "Photographer").
-    4. **Peer Exchange (Med/Low Score 40-60%):** Competitors or same industry. Good for benchmarking, less for direct sales.
-
-    **Instructions:**
-    1. **Parse:** Extract participants. Assign IDs. Clean segment names to be standard business terms.
-    2. **Deep Dive Analysis:** For *each* participant, identify who they *must* talk to.
-    3. **Scores:**
-       - **Overall Score:** How dynamic is the room? Are there buyers and sellers?
-       - **Individual Score:** How "hot" is this person? A "General Buyer" (like a large retailer) has a high score because everyone wants them. A "Niche Service" might have a lower score if no buyers are present.
+    You are a Senior Strategic Business Connector. Analyze the provided list of event participants.
     
-    **Room Layout & Seating Strategy:**
-    - Based on the number of participants and the goal of maximizing interaction, suggest the **best room layout** from this list:
-      ['teatro', 'sala_aula', 'mesa_o', 'conferencia', 'mesa_u', 'mesa_t', 'recepcao', 'buffet']
-    - **Seating Groups:** Organize *all* participants into optimized clusters (groups of 4 to 8 IDs) that should sit together or near each other to maximize business synergy. Every participant must be included in exactly one group.
-
-    Return the result strictly in JSON format matching the schema.
+    **Task:** Calculate the "Rampup IN" (Business Index) for networking synergy.
+    
+    **Rules:**
+    1. Parse participants.
+    2. Identify relationships: Supply Chain (High), B2B Services (High/Med), Complementary (Med), Peers (Low).
+    3. Calculate scores based on the value each person brings to others in the room.
+    4. Suggest layout and seating groups.
+    
+    Return strict JSON matching the schema.
     
     Raw Data:
     ${rawData}
   `;
 
-  try {
-    const response = await genAI.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: analysisSchema,
-        temperature: 0.2, // Low temperature for precise, logical connections
-      },
-    });
-
-    const jsonText = response.text;
-    if (!jsonText) throw new Error("No data returned from AI");
-    
-    return JSON.parse(jsonText) as AnalysisResult;
-  } catch (error) {
-    console.error("Analysis failed:", error);
-    throw new Error("Failed to analyze networking data.");
-  }
+  return callGemini(prompt);
 };
+
+export const analyzeHostPotential = async (hostsData: string, participantsData: string): Promise<AnalysisResult> => {
+    const prompt = `
+      You are a Senior Business Strategist focusing on HOST analysis.
+  
+      **Context:**
+      We have one or more HOSTS (the organizers or main VIPs) and a list of GUESTS (participants).
+  
+      **Goal:**
+      Analyze how valuable the GUESTS are specifically for the HOSTS. 
+      The "Individual Score" for the HOSTS should reflect how many opportunities exist for them in the room.
+      The "Individual Score" for the GUESTS should reflect how valuable they are to the HOST.
+  
+      **Inputs:**
+      HOSTS DATA:
+      ${hostsData}
+  
+      GUESTS DATA:
+      ${participantsData}
+  
+      **Instructions:**
+      1. Parse both lists. Mark HOSTS with 'isHost: true'.
+      2. **Priority Analysis:** Focus heavily on finding matches where the HOST sells to the Guest, or the Guest sells something strategic to the Host, or they are partners.
+      3. **Top Matches:** The 'topMatches' array MUST prioritize connections involving at least one HOST.
+      4. **Seating:** Ensure HOSTS are seated with their highest value targets (High scores).
+      5. **Overall Score:** This now represents the "Success Probability for the Host".
+  
+      Return strict JSON matching the schema.
+    `;
+  
+    return callGemini(prompt);
+};
+
+const callGemini = async (prompt: string): Promise<AnalysisResult> => {
+    try {
+        const response = await genAI.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: analysisSchema,
+            temperature: 0.2,
+          },
+        });
+    
+        const jsonText = response.text;
+        if (!jsonText) throw new Error("No data returned from AI");
+        
+        return JSON.parse(jsonText) as AnalysisResult;
+      } catch (error) {
+        console.error("Analysis failed:", error);
+        throw new Error("Failed to analyze networking data.");
+      }
+}

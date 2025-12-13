@@ -5,6 +5,7 @@ interface InputViewProps {
   onAnalyze: (data: string) => void;
   isLoading: boolean;
   isDarkMode: boolean;
+  onBack: () => void;
 }
 
 const DEMO_DATA = `Evento: Summit de Negócios Brasil 2025
@@ -61,7 +62,7 @@ const DEMO_DATA = `Evento: Summit de Negócios Brasil 2025
 50. Bianca Neves, Neves Makeup, Maquiadora Profissional
 51. Renan Sales, Sales Eletro, Instalações Elétricas`;
 
-const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode }) => {
+const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode, onBack }) => {
   const [inputText, setInputText] = useState('');
   const [activeMethod, setActiveMethod] = useState<'paste' | 'file'>('paste');
 
@@ -84,7 +85,16 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode 
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto animate-fade-in">
+      <div className="mb-6">
+        <button 
+          onClick={onBack}
+          className={`text-sm font-medium hover:underline ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+        >
+          &larr; Voltar para seleção
+        </button>
+      </div>
+
       {/* Container with stylized green tones */}
       <div className={`rounded-2xl shadow-xl overflow-hidden border-2 transition-all duration-300 ${
         isDarkMode 

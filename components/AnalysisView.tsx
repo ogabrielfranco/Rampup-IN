@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, 
   CartesianGrid, LabelList
 } from 'recharts';
-import { Users, TrendingUp, Link, ArrowLeft, FileSpreadsheet, Filter, Info, ChevronUp, ChevronDown, Flame, List, Target, PieChart, Layers, Search, Building2, User, X, Briefcase, ExternalLink, Network, LayoutTemplate, LayoutDashboard } from 'lucide-react';
+import { Users, TrendingUp, Link, ArrowLeft, FileSpreadsheet, Filter, Info, ChevronUp, ChevronDown, Flame, List, Target, PieChart, Layers, Search, Building2, User, X, Briefcase, ExternalLink, Network, LayoutTemplate, LayoutDashboard, Crown } from 'lucide-react';
 
 interface AnalysisViewProps {
   data: AnalysisResult;
@@ -112,15 +112,22 @@ const ParticipantModal = ({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`p-6 border-b flex justify-between items-start ${isDarkMode ? 'border-gray-800 bg-gray-800/50' : 'border-gray-100 bg-emerald-50/30'}`}>
+        <div className={`p-6 border-b flex justify-between items-start ${
+          isDarkMode ? 'border-gray-800 bg-gray-800/50' : participant.isHost ? 'bg-amber-50 border-amber-100' : 'border-gray-100 bg-emerald-50/30'
+        }`}>
           <div className="flex items-center gap-4">
              <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold ${
-                isDarkMode ? 'bg-gray-800 border border-gray-700 text-verde-light' : 'bg-white border-2 border-emerald-100 text-emerald-600 shadow-sm'
+                participant.isHost
+                ? 'bg-amber-400 text-white shadow-lg shadow-amber-500/30 border-2 border-white'
+                : isDarkMode ? 'bg-gray-800 border border-gray-700 text-verde-light' : 'bg-white border-2 border-emerald-100 text-emerald-600 shadow-sm'
              }`}>
-                {participant.name.substring(0,2).toUpperCase()}
+                {participant.isHost ? <Crown className="w-6 h-6" /> : participant.name.substring(0,2).toUpperCase()}
              </div>
              <div>
-               <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{participant.name}</h2>
+               <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                 {participant.name}
+                 {participant.isHost && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 align-middle">HOST</span>}
+               </h2>
                <div className="flex items-center gap-2 mt-1">
                  <Building2 className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                  <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{participant.company}</span>
@@ -160,7 +167,10 @@ const ParticipantModal = ({
                 }`}>
                   <div className="flex justify-between items-start">
                      <div>
-                       <div className={`font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>{rec.partner?.name}</div>
+                       <div className={`font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                         {rec.partner?.name}
+                         {rec.partner?.isHost && <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 px-1 rounded border border-amber-200">HOST</span>}
+                       </div>
                        <div className={`text-sm flex items-center gap-1.5 mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                          <Briefcase className="w-3 h-3" />
                          {rec.partner?.company}
@@ -271,6 +281,10 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
       const pA = getParticipant(a.participantId);
       const pB = getParticipant(b.participantId);
 
+      // Prioritize hosts in sort if scores are equal, or just keep score sort
+      // If Host Analysis mode, Hosts might be interesting to float to top? 
+      // Current requirement: "Highlight them".
+      
       if (sortField === 'score') {
         return sortDirection === 'asc' ? a.score - b.score : b.score - a.score;
       } else {
@@ -300,7 +314,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
 
   const handleExportCSV = () => {
     const headers = [
-      "Nome (Origem)", "Empresa (Origem)", "Segmento (Origem)", 
+      "Tipo", "Nome (Origem)", "Empresa (Origem)", "Segmento (Origem)", 
       "Nome (Destino)", "Empresa (Destino)", "Segmento (Destino)", 
       "Score de Conexão", "Motivo da Sinergia"
     ];
@@ -316,6 +330,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
             const targetParticipant = getParticipant(conn.partnerId);
             if (targetParticipant) {
                const row = [
+                 sourceParticipant.isHost ? "HOST" : "CONVIDADO",
                  sourceParticipant.name,
                  sourceParticipant.company,
                  sourceParticipant.segment,
@@ -331,6 +346,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
         } else {
             // Include participants with no high-value connections so they appear in the report
              const row = [
+                 sourceParticipant.isHost ? "HOST" : "CONVIDADO",
                  sourceParticipant.name,
                  sourceParticipant.company,
                  sourceParticipant.segment,
@@ -638,7 +654,10 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
                   <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-[2px] ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
 
                   <div className="flex-1 min-w-0">
-                    <p className={`font-bold text-base truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{p1.name}</p>
+                    <p className={`font-bold text-base truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {p1.name}
+                      {p1.isHost && <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 px-1 rounded border border-amber-200 align-middle">HOST</span>}
+                    </p>
                     <p className={`text-xs mt-1 truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{p1.company}</p>
                     <p className={`text-xs mt-0.5 inline-block px-2 py-0.5 rounded ${isDarkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-50 text-gray-600'}`}>{p1.segment}</p>
                   </div>
@@ -648,7 +667,10 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
                   </div>
                   
                   <div className="flex-1 min-w-0 text-right">
-                    <p className={`font-bold text-base truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{p2.name}</p>
+                    <p className={`font-bold text-base truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {p2.name}
+                      {p2.isHost && <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 px-1 rounded border border-amber-200 align-middle">HOST</span>}
+                    </p>
                     <p className={`text-xs mt-1 truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{p2.company}</p>
                     <p className={`text-xs mt-0.5 inline-block px-2 py-0.5 rounded ${isDarkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-50 text-gray-600'}`}>{p2.segment}</p>
                   </div>
@@ -774,20 +796,23 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
                       className={`group transition-all duration-200 cursor-pointer ${
                         isDarkMode 
                           ? 'hover:bg-gray-800/60' 
-                          : 'hover:bg-gray-50'
+                          : p.isHost ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50'
                       }`}
                     >
                       <td className="px-8 py-5">
                          <div className="flex items-center gap-4">
                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shadow-sm transition-colors ${
-                              isDarkMode 
+                              p.isHost 
+                              ? 'bg-amber-400 text-white shadow-lg shadow-amber-500/30'
+                              : isDarkMode 
                                 ? 'bg-gray-800 text-gray-300 border border-gray-700 group-hover:border-verde-light group-hover:text-verde-light' 
                                 : 'bg-white text-gray-600 border border-gray-200 group-hover:border-emerald-200 group-hover:text-emerald-700'
                            }`}>
-                             {initials}
+                             {p.isHost ? <Crown className="w-4 h-4" /> : initials}
                            </div>
                            <div className={`font-semibold text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                              {p.name}
+                             {p.isHost && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 align-middle">HOST</span>}
                            </div>
                          </div>
                       </td>

@@ -4,6 +4,7 @@ export interface Participant {
   company: string;
   segment: string;
   eventName?: string;
+  isHost?: boolean; // New flag to identify hosts in the results
 }
 
 export interface ConnectionMatch {
@@ -41,7 +42,10 @@ export interface AnalysisResult {
 }
 
 export enum AppView {
+  SELECTION = 'SELECTION',
   INPUT = 'INPUT',
   ANALYZING = 'ANALYZING',
   RESULTS = 'RESULTS',
 }
+
+export type AppMode = 'GENERAL' | 'HOST';

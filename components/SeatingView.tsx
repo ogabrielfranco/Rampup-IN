@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AnalysisResult, LayoutFormat, Participant, IndividualScore } from '../types';
-import { LayoutDashboard, Users, User, ArrowRight, Grid, Monitor, Disc, Rows, RectangleHorizontal, Magnet, AlignJustify, Save, Filter, ChevronDown, Check, Image as ImageIcon, MousePointerClick, Eraser, Move } from 'lucide-react';
+import { LayoutDashboard, Users, User, ArrowRight, Grid, Monitor, Disc, Rows, RectangleHorizontal, Magnet, AlignJustify, Save, Filter, ChevronDown, Check, Image as ImageIcon, MousePointerClick, Eraser, Move, Plus, Crown, Circle, Square, Flower, DoorOpen } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 interface SeatingViewProps {
@@ -9,7 +9,7 @@ interface SeatingViewProps {
 }
 
 const LAYOUT_OPTIONS: { id: LayoutFormat; label: string; icon: any; description: string }[] = [
-  { id: 'custom', label: 'Livre / Personalizado', icon: MousePointerClick, description: 'Crie seu próprio layout clicando para adicionar assentos.' },
+  { id: 'custom', label: 'Livre / Personalizado', icon: MousePointerClick, description: 'Crie seu próprio layout adicionando objetos e assentos.' },
   { id: 'sala_aula', label: 'Sala de Aula', icon: Monitor, description: 'Fileiras com mesas. Foco em aprendizado.' },
   { id: 'mesa_o', label: 'Mesa em O', icon: LayoutDashboard, description: 'Quadrado vazado. Similar ao U, mas fechado.' },
   { id: 'buffet', label: 'Buffet / Banquete', icon: Disc, description: 'Mesas redondas para 6-8 pessoas. Ideal para networking intenso.' },
@@ -29,18 +29,27 @@ interface SeatCardProps {
 }
 
 const SeatCard: React.FC<SeatCardProps> = ({ p, idx, isDarkMode, isDimmed, score }) => (
-  <div className={`flex items-center gap-2 p-2 rounded-lg border w-full mb-2 transition-opacity duration-300 ${
+  <div className={`flex items-center gap-2 p-2 rounded-lg border w-full mb-2 transition-opacity duration-300 relative ${
      isDimmed ? 'opacity-30 grayscale' : 'opacity-100'
   } ${
-     isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
+     p.isHost 
+      ? 'bg-amber-100 border-amber-300 shadow-md transform scale-[1.02]' 
+      : isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
   }`}>
+     {p.isHost && (
+       <div className="absolute -top-2 -right-2 bg-amber-500 text-white p-1 rounded-full shadow-sm z-10">
+         <Crown className="w-3 h-3" />
+       </div>
+     )}
      <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold ${
-        isDarkMode ? 'bg-gray-800 text-verde-light' : 'bg-emerald-100 text-emerald-700'
+        p.isHost 
+          ? 'bg-amber-500 text-white' 
+          : isDarkMode ? 'bg-gray-800 text-verde-light' : 'bg-emerald-100 text-emerald-700'
      }`}>{idx}</div>
      <div className="min-w-0">
-       <div className={`text-xs font-bold truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{p.name}</div>
+       <div className={`text-xs font-bold truncate ${isDarkMode && !p.isHost ? 'text-gray-200' : 'text-gray-800'}`}>{p.name}</div>
        <div className="flex items-center gap-2">
-          <div className={`text-[10px] truncate ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{p.company}</div>
+          <div className={`text-[10px] truncate ${isDarkMode && !p.isHost ? 'text-gray-500' : 'text-gray-500'}`}>{p.company}</div>
           {score !== undefined && (
             <div className={`text-[9px] font-bold px-1 rounded ${score >= 80 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
               IN: {score}
@@ -51,53 +60,26 @@ const SeatCard: React.FC<SeatCardProps> = ({ p, idx, isDarkMode, isDimmed, score
   </div>
 );
 
-// Helper for the Classroom Layout
-const ClassroomTableBlock = ({ participants, isDarkMode, checkVisibility }: { participants: Participant[], isDarkMode: boolean, checkVisibility: (p: Participant) => boolean }) => (
-  <div className="flex flex-col items-center gap-1 mx-2">
-    {/* The Purple Table Rect */}
-    <div className={`w-32 h-14 rounded-md shadow-sm mb-2 flex items-center justify-center ${
-      isDarkMode ? 'bg-purple-900 border border-purple-700' : 'bg-[#6B4FBB] text-white'
-    }`}>
-      <span className="text-[10px] font-bold opacity-50">Mesa</span>
-    </div>
-    
-    {/* The Chairs (Dots) */}
-    <div className="flex gap-2 justify-center">
-      {participants.map((p, i) => {
-        const visible = checkVisibility(p);
-        return (
-          <div key={p.id} className="relative group/chair">
-             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-opacity ${
-               visible ? 'opacity-100' : 'opacity-20'
-             } ${
-               isDarkMode 
-                 ? 'bg-yellow-600 text-white border border-yellow-500' 
-                 : 'bg-[#FDE047] text-gray-800 border border-yellow-400 shadow-sm'
-             }`}>
-               {/* Use first initial */}
-               {p.name.charAt(0)}
-             </div>
-             
-             {/* Tooltip on Hover */}
-             <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 p-2 rounded text-[10px] z-50 hidden group-hover/chair:block pointer-events-none ${
-                 isDarkMode ? 'bg-gray-800 text-white border border-gray-700' : 'bg-white text-gray-900 border border-gray-200 shadow-xl'
-             }`}>
-                <div className="font-bold">{p.name}</div>
-                <div className="opacity-75">{p.company}</div>
-                <div className="text-[9px] mt-1">{p.segment}</div>
-             </div>
-          </div>
-        )
-      })}
-    </div>
-  </div>
-);
+// Custom Object Types
+type CustomObjectType = 'seat' | 'table_round' | 'table_rect' | 'stage' | 'plant';
 
-interface CustomSeat {
-  id: string; // generated ID for the seat position
+interface CustomObject {
+  id: string;
+  type: CustomObjectType;
   x: number; // percentage
   y: number; // percentage
+  width?: number; // px or %
+  height?: number; // px or %
+  participantIndex?: number; // for seats
 }
+
+const TOOLBAR_ITEMS: { type: CustomObjectType; label: string; icon: any }[] = [
+  { type: 'seat', label: 'Cadeira', icon: User },
+  { type: 'table_round', label: 'Mesa Redonda', icon: Circle },
+  { type: 'table_rect', label: 'Mesa Retangular', icon: Square },
+  { type: 'stage', label: 'Palco', icon: Monitor },
+  { type: 'plant', label: 'Decoração', icon: Flower },
+];
 
 const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
   // Load saved layout or use suggested
@@ -107,7 +89,8 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
   });
 
   // Custom Layout State
-  const [customSeats, setCustomSeats] = useState<CustomSeat[]>([]);
+  const [customObjects, setCustomObjects] = useState<CustomObject[]>([]);
+  const [activeTool, setActiveTool] = useState<CustomObjectType | null>(null);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -164,61 +147,99 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
 
   // Custom Layout Handlers
   const handleCanvasClick = (e: React.MouseEvent) => {
-    if (selectedLayout !== 'custom') return;
-    // Only add if clicking the background, not a seat
+    if (selectedLayout !== 'custom' || !activeTool) return;
+    // Only add if clicking the background, not an object
     if ((e.target as HTMLElement) !== containerRef.current) return;
-
-    if (customSeats.length >= linearParticipants.length) return;
 
     const rect = containerRef.current!.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    setCustomSeats(prev => [...prev, { id: Date.now().toString(), x, y }]);
+    let newObj: CustomObject = {
+      id: Date.now().toString(),
+      type: activeTool,
+      x,
+      y,
+    };
+
+    if (activeTool === 'seat') {
+       // Assign next available participant index
+       const usedIndices = new Set(customObjects.filter(o => o.type === 'seat').map(o => o.participantIndex));
+       let nextIdx = 0;
+       while (usedIndices.has(nextIdx)) nextIdx++;
+       
+       if (nextIdx < linearParticipants.length) {
+         newObj.participantIndex = nextIdx;
+       } else {
+         return; // No more participants
+       }
+    }
+
+    setCustomObjects(prev => [...prev, newObj]);
   };
 
-  const handleSeatDragStart = (e: React.MouseEvent, id: string) => {
+  const handleObjectDragStart = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setIsDragging(id);
   };
 
-  const handleSeatDragMove = (e: React.MouseEvent) => {
+  const handleObjectDragMove = (e: React.MouseEvent) => {
     if (!isDragging || !containerRef.current) return;
     
     const rect = containerRef.current.getBoundingClientRect();
     const x = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
     const y = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
 
-    setCustomSeats(prev => prev.map(seat => seat.id === isDragging ? { ...seat, x, y } : seat));
+    setCustomObjects(prev => prev.map(obj => obj.id === isDragging ? { ...obj, x, y } : obj));
   };
 
-  const handleSeatDragEnd = () => {
+  const handleObjectDragEnd = () => {
     setIsDragging(null);
   };
 
-  const clearCustomSeats = () => setCustomSeats([]);
+  const clearCustomObjects = () => setCustomObjects([]);
 
   const renderVisualMap = () => {
     switch (selectedLayout) {
       case 'custom':
         return (
-          <div className="flex flex-col h-full min-h-[500px]">
-             <div className="flex justify-between items-center mb-4 px-2">
-                <div className="text-sm italic opacity-70">
-                   Clique na área abaixo para adicionar cadeiras. Arraste para mover.
-                </div>
-                <button onClick={clearCustomSeats} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-bold px-3 py-1 border border-red-200 rounded-lg hover:bg-red-50 transition">
-                   <Eraser className="w-3 h-3" /> Limpar Tudo
+          <div className="flex flex-col h-full min-h-[600px]">
+             {/* Toolbar */}
+             <div className="flex flex-wrap items-center gap-2 mb-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+                <span className="text-xs font-bold uppercase mr-2 opacity-50">Ferramentas:</span>
+                {TOOLBAR_ITEMS.map(item => (
+                  <button
+                    key={item.type}
+                    onClick={() => setActiveTool(item.type)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                      activeTool === item.type 
+                        ? 'bg-emerald-600 text-white shadow-md' 
+                        : 'bg-white text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200'
+                    }`}
+                  >
+                    <item.icon className="w-3 h-3" />
+                    {item.label}
+                  </button>
+                ))}
+                <div className="flex-1"></div>
+                <button onClick={clearCustomObjects} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-bold px-3 py-1.5 border border-red-200 rounded-md hover:bg-red-50 transition ml-auto">
+                   <Eraser className="w-3 h-3" /> Limpar
                 </button>
+             </div>
+
+             <div className="mb-2 text-xs opacity-60 text-center italic">
+                {activeTool ? "Clique no mapa para adicionar o objeto selecionado." : "Selecione uma ferramenta acima para começar."}
              </div>
              
              <div 
                ref={containerRef}
                onClick={handleCanvasClick}
-               onMouseMove={handleSeatDragMove}
-               onMouseUp={handleSeatDragEnd}
-               onMouseLeave={handleSeatDragEnd}
-               className={`flex-1 relative rounded-xl border-2 border-dashed overflow-hidden min-h-[500px] cursor-crosshair transition-colors ${
+               onMouseMove={handleObjectDragMove}
+               onMouseUp={handleObjectDragEnd}
+               onMouseLeave={handleObjectDragEnd}
+               className={`flex-1 relative rounded-xl border-2 border-dashed overflow-hidden min-h-[500px] transition-colors ${
+                 activeTool ? 'cursor-crosshair' : 'cursor-default'
+               } ${
                  isDarkMode 
                    ? 'border-gray-700 bg-gray-900/50 hover:bg-gray-800/50' 
                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
@@ -229,37 +250,74 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                      style={{ backgroundImage: `linear-gradient(${isDarkMode ? '#555' : '#ccc'} 1px, transparent 1px), linear-gradient(90deg, ${isDarkMode ? '#555' : '#ccc'} 1px, transparent 1px)`, backgroundSize: '40px 40px' }}>
                 </div>
 
-                {customSeats.map((seat, idx) => {
-                  const p = linearParticipants[idx];
-                  if (!p) return null;
-                  const visible = checkVisibility(p);
+                {customObjects.map((obj) => {
+                  let content = null;
+                  let styleClass = "";
+                  
+                  if (obj.type === 'seat' && obj.participantIndex !== undefined) {
+                    const p = linearParticipants[obj.participantIndex];
+                    if (!p) return null;
+                    const visible = checkVisibility(p);
+                    const isHost = p.isHost;
 
-                  return (
-                    <div
-                      key={seat.id}
-                      onMouseDown={(e) => handleSeatDragStart(e, seat.id)}
-                      style={{ left: `${seat.x}%`, top: `${seat.y}%`, transform: 'translate(-50%, -50%)' }}
-                      className={`absolute cursor-move flex flex-col items-center group/custom z-10`}
-                    >
-                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-all hover:scale-110 ${
-                          isDarkMode 
-                            ? 'bg-verde-neon text-black border-2 border-white' 
-                            : 'bg-emerald-500 text-white border-2 border-white'
-                       } ${visible ? 'opacity-100' : 'opacity-40 grayscale'}`}>
-                          {idx + 1}
-                       </div>
-                       <div className={`mt-1 px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap shadow-sm pointer-events-none ${
-                         isDarkMode ? 'bg-black/70 text-white' : 'bg-white/90 text-gray-800 border'
-                       }`}>
-                         {p.name.split(' ')[0]}
-                       </div>
-                    </div>
-                  );
+                    return (
+                      <div
+                        key={obj.id}
+                        onMouseDown={(e) => handleObjectDragStart(e, obj.id)}
+                        style={{ left: `${obj.x}%`, top: `${obj.y}%`, transform: 'translate(-50%, -50%)' }}
+                        className={`absolute cursor-move flex flex-col items-center group/custom z-20`}
+                      >
+                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-all hover:scale-110 ${
+                            isHost 
+                              ? 'bg-amber-500 text-white border-2 border-white ring-2 ring-amber-300' 
+                              : isDarkMode 
+                                ? 'bg-verde-neon text-black border-2 border-white' 
+                                : 'bg-emerald-500 text-white border-2 border-white'
+                         } ${visible ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+                            {isHost ? <Crown className="w-4 h-4" /> : obj.participantIndex + 1}
+                         </div>
+                         <div className={`mt-1 px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap shadow-sm pointer-events-none ${
+                           isHost ? 'bg-amber-100 text-amber-900 border border-amber-300' : isDarkMode ? 'bg-black/70 text-white' : 'bg-white/90 text-gray-800 border'
+                         }`}>
+                           {p.name.split(' ')[0]}
+                         </div>
+                      </div>
+                    );
+                  } else {
+                     // Render other objects
+                     switch(obj.type) {
+                        case 'table_round':
+                           styleClass = "w-16 h-16 rounded-full border-4 opacity-50 bg-gray-300 dark:bg-gray-600 border-gray-400";
+                           break;
+                        case 'table_rect':
+                           styleClass = "w-24 h-12 rounded border-4 opacity-50 bg-gray-300 dark:bg-gray-600 border-gray-400";
+                           break;
+                        case 'stage':
+                           styleClass = "w-32 h-12 rounded-t-xl border-x-4 border-t-4 opacity-70 bg-indigo-200 dark:bg-indigo-900 border-indigo-400";
+                           content = <span className="text-[8px] uppercase font-bold">Palco</span>;
+                           break;
+                        case 'plant':
+                           styleClass = "w-8 h-8 flex items-center justify-center text-green-600 dark:text-green-400";
+                           content = <Flower className="w-8 h-8" />;
+                           break;
+                     }
+
+                     return (
+                        <div
+                           key={obj.id}
+                           onMouseDown={(e) => handleObjectDragStart(e, obj.id)}
+                           style={{ left: `${obj.x}%`, top: `${obj.y}%`, transform: 'translate(-50%, -50%)' }}
+                           className={`absolute cursor-move z-10 flex items-center justify-center ${styleClass}`}
+                        >
+                           {content}
+                        </div>
+                     );
+                  }
                 })}
              </div>
              
              <div className="mt-4 text-center text-xs">
-                {customSeats.length} / {linearParticipants.length} assentos posicionados
+                {customObjects.filter(o => o.type === 'seat').length} / {linearParticipants.length} participantes posicionados
              </div>
           </div>
         );
@@ -288,9 +346,12 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                     const visible = checkVisibility(p);
                     return (
                       <div key={id} className={`group/p relative transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-20'}`}>
-                        <div className={`text-xs font-medium truncate py-1 px-2 rounded cursor-help transition-colors ${
-                          isDarkMode ? 'bg-gray-700/80 text-gray-200 hover:bg-gray-600' : 'bg-gray-50 text-gray-700 hover:bg-emerald-50'
+                        <div className={`text-xs font-medium truncate py-1 px-2 rounded cursor-help transition-colors flex items-center justify-center gap-1 ${
+                          p.isHost 
+                          ? 'bg-amber-100 text-amber-800 font-bold border border-amber-200'
+                          : isDarkMode ? 'bg-gray-700/80 text-gray-200 hover:bg-gray-600' : 'bg-gray-50 text-gray-700 hover:bg-emerald-50'
                         }`}>
+                          {p.isHost && <Crown className="w-3 h-3" />}
                           {p.name}
                         </div>
                         {/* Hover Tooltip */}
@@ -320,14 +381,18 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                   const visible = checkVisibility(p);
                   return (
                   <div key={p.id} className={`flex flex-col items-center w-24 p-2 rounded border transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-20'} ${
-                    isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
+                    p.isHost 
+                    ? 'bg-amber-50 border-amber-300 shadow-md'
+                    : isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
                   }`}>
                     <div className={`w-8 h-8 rounded-full mb-1 flex items-center justify-center text-xs font-bold ${
-                      isDarkMode ? 'bg-gray-800 text-verde-light' : 'bg-emerald-100 text-emerald-700'
+                      p.isHost 
+                      ? 'bg-amber-500 text-white'
+                      : isDarkMode ? 'bg-gray-800 text-verde-light' : 'bg-emerald-100 text-emerald-700'
                     }`}>
-                      {idx + 1}
+                      {p.isHost ? <Crown className="w-4 h-4" /> : idx + 1}
                     </div>
-                    <span className={`text-[10px] text-center font-medium leading-tight line-clamp-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <span className={`text-[10px] text-center font-medium leading-tight line-clamp-2 ${isDarkMode && !p.isHost ? 'text-gray-300' : 'text-gray-700'}`}>
                       {p.name}
                     </span>
                     <span className={`text-[9px] text-center opacity-60 line-clamp-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{p.company}</span>
@@ -362,9 +427,12 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                          const visible = checkVisibility(p);
                          return (
                         <div key={p.id} className={`flex flex-col items-center w-20 p-1.5 rounded border transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-20'} ${
-                          isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
+                          p.isHost ? 'bg-amber-100 border-amber-300' : isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
                         }`}>
-                          <span className={`text-[9px] font-bold text-center leading-tight ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{p.name}</span>
+                          <span className={`text-[9px] font-bold text-center leading-tight ${isDarkMode && !p.isHost ? 'text-gray-200' : 'text-gray-800'}`}>
+                            {p.isHost && <Crown className="w-3 h-3 mx-auto mb-1 text-amber-600" />}
+                            {p.name}
+                          </span>
                         </div>
                       )})}
                    </div>
@@ -402,12 +470,12 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                    const visible = checkVisibility(p);
                    return (
                    <div key={p.id} className={`w-24 p-2 rounded border text-center transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-20'} ${
-                      isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
+                      p.isHost ? 'bg-amber-100 border-amber-300' : isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200 shadow-sm'
                    }`}>
                       <div className={`w-6 h-6 mx-auto rounded-full mb-1 flex items-center justify-center text-[10px] font-bold ${
-                         isDarkMode ? 'bg-gray-800 text-verde-light' : 'bg-emerald-100 text-emerald-700'
-                      }`}>{idx + 1}</div>
-                      <span className={`text-[10px] font-bold block truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{p.name}</span>
+                         p.isHost ? 'bg-amber-500 text-white' : isDarkMode ? 'bg-gray-800 text-verde-light' : 'bg-emerald-100 text-emerald-700'
+                      }`}>{p.isHost ? <Crown className="w-3 h-3" /> : idx + 1}</div>
+                      <span className={`text-[10px] font-bold block truncate ${isDarkMode && !p.isHost ? 'text-gray-200' : 'text-gray-800'}`}>{p.name}</span>
                    </div>
                 )})}
              </div>
@@ -426,9 +494,8 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         );
 
       case 'mesa_o':
-        // Updated MESA_O Logic: Grid layout allowing visible names
+        // MESA_O Logic: Grid layout allowing visible names
         const qTotal = linearParticipants.length;
-        // Divide by 4 roughly, but top and bottom need to cover corners usually, or we just do simple division
         const sideCount = Math.floor(qTotal / 4);
         const oTopList = linearParticipants.slice(0, sideCount);
         const oRightList = linearParticipants.slice(sideCount, sideCount * 2);
@@ -478,49 +545,48 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         );
 
       case 'sala_aula':
-        // Updated Classroom Logic: Purple Tables, Yellow Dots
-        const itemsPerRow = 4; // 2 participants per table, 2 tables per side? Let's just flow them.
-        // We will create rows. Each row has 2 blocks of tables.
-        // Each block has e.g. 4 people (4 dots).
-        const peoplePerBlock = 4; // 4 dots per table rect
-        const peoplePerRow = peoplePerBlock * 2; // Left side and right side
+        // REFACTORED Classroom Logic: Using SeatCards in a standard grid layout
+        // Rows of desks facing the front.
+        const classroomCols = 4; // 4 columns of desks
+        const classroomRows = Math.ceil(linearParticipants.length / classroomCols);
+        const gridParticipants = [];
         
-        const rowsCount = Math.ceil(linearParticipants.length / peoplePerRow);
-        const rows = [];
-        
-        for (let i = 0; i < rowsCount; i++) {
-           const rowStart = i * peoplePerRow;
-           const rowItems = linearParticipants.slice(rowStart, rowStart + peoplePerRow);
-           
-           const leftBlock = rowItems.slice(0, peoplePerBlock);
-           const rightBlock = rowItems.slice(peoplePerBlock, peoplePerRow);
-           
-           rows.push({ left: leftBlock, right: rightBlock });
+        for (let i = 0; i < classroomRows; i++) {
+          gridParticipants.push(linearParticipants.slice(i * classroomCols, (i + 1) * classroomCols));
         }
 
         return (
-          <div className="flex flex-col items-center gap-12 py-8">
-             {/* Stage */}
-             <div className={`w-3/4 h-16 rounded-b-xl border-b-4 border-x-4 mb-4 flex items-center justify-center ${
-                isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-gray-100'
+          <div className="flex flex-col items-center gap-8 py-8 min-h-[600px]">
+             {/* Stage / Board */}
+             <div className={`w-3/4 h-12 rounded-b-xl border-b-4 border-x-4 mb-8 flex items-center justify-center shadow-lg ${
+                isDarkMode ? 'border-gray-600 bg-gray-800 text-gray-400' : 'border-emerald-800 bg-emerald-900 text-emerald-100'
              }`}>
-               <span className="text-sm font-bold uppercase tracking-widest opacity-60">Lousa / Palco</span>
+               <div className="flex items-center gap-2">
+                 <Monitor className="w-4 h-4" />
+                 <span className="text-sm font-bold uppercase tracking-widest">Lousa / Apresentação</span>
+               </div>
              </div>
 
-             {/* Rows */}
-             {rows.map((row, rIdx) => (
-               <div key={rIdx} className="flex gap-16">
-                  {/* Left Block */}
-                  {row.left.length > 0 && (
-                    <ClassroomTableBlock participants={row.left} isDarkMode={isDarkMode} checkVisibility={checkVisibility} />
-                  )}
-                  
-                  {/* Right Block */}
-                  {row.right.length > 0 && (
-                    <ClassroomTableBlock participants={row.right} isDarkMode={isDarkMode} checkVisibility={checkVisibility} />
-                  )}
-               </div>
-             ))}
+             {/* Rows of Desks */}
+             <div className="flex flex-col gap-6 w-full max-w-4xl px-4">
+                {gridParticipants.map((row, rIdx) => (
+                   <div key={rIdx} className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                      {row.map((p, cIdx) => (
+                         <div key={p.id} className="w-full">
+                            <SeatCard 
+                               p={p} 
+                               idx={rIdx * classroomCols + cIdx + 1} 
+                               isDarkMode={isDarkMode} 
+                               isDimmed={!checkVisibility(p)} 
+                               score={getScore(p.id)}
+                            />
+                            {/* Desk Visual underneath */}
+                            <div className={`h-2 w-[90%] mx-auto mt-1 rounded-full opacity-30 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-400'}`}></div>
+                         </div>
+                      ))}
+                   </div>
+                ))}
+             </div>
           </div>
         );
 
@@ -539,15 +605,15 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                  const visible = checkVisibility(p);
                  return (
                  <div key={p.id} className={`p-3 rounded-lg border text-center transition-all hover:scale-105 ${visible ? 'opacity-100' : 'opacity-20'} ${
-                   isDarkMode ? 'bg-gray-800 border-gray-700 hover:border-verde-light' : 'bg-white border-gray-200 hover:border-emerald-300 shadow-sm'
+                   p.isHost ? 'bg-amber-100 border-amber-300' : isDarkMode ? 'bg-gray-800 border-gray-700 hover:border-verde-light' : 'bg-white border-gray-200 hover:border-emerald-300 shadow-sm'
                  }`}>
                    <div className={`mx-auto w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold mb-2 ${
-                      isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-500'
+                      p.isHost ? 'bg-amber-500 text-white' : isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-500'
                    }`}>
-                     {idx + 1}
+                     {p.isHost ? <Crown className="w-3 h-3" /> : idx + 1}
                    </div>
-                   <p className={`text-xs font-bold leading-tight line-clamp-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{p.name}</p>
-                   <p className={`text-[10px] mt-1 opacity-70 truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{p.company}</p>
+                   <p className={`text-xs font-bold leading-tight line-clamp-2 ${isDarkMode && !p.isHost ? 'text-gray-200' : 'text-gray-800'}`}>{p.name}</p>
+                   <p className={`text-[10px] mt-1 opacity-70 truncate ${isDarkMode && !p.isHost ? 'text-gray-400' : 'text-gray-500'}`}>{p.company}</p>
                    <p className={`text-[9px] mt-1 font-mono ${isDarkMode ? 'text-verde-light' : 'text-emerald-600'}`}>IN: {getScore(p.id)}</p>
                  </div>
                )})}
@@ -688,8 +754,8 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Assento</span>
                </div>
                <div className="flex items-center gap-1">
-                 <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'border-2 border-gray-500' : 'border-2 border-emerald-500'}`}></div>
-                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Mesa/Estrutura</span>
+                 <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Host</span>
                </div>
             </div>
          </div>

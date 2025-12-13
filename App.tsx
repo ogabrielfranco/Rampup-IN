@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import InputView from './components/InputView';
+import SelectionView from './components/SelectionView';
+import HostInputView from './components/HostInputView';
 import AnalysisView from './components/AnalysisView';
-import { analyzeNetworkingData } from './services/geminiService';
-import { AnalysisResult, AppView } from './types';
+import { analyzeNetworkingData, analyzeHostPotential } from './services/geminiService';
+import { AnalysisResult, AppView, AppMode } from './types';
 import { Network, Moon, Sun } from 'lucide-react';
 
 const LOADING_MESSAGES = [
@@ -15,7 +17,8 @@ const LOADING_MESSAGES = [
 ];
 
 const App: React.FC = () => {
-  const [view, setView] = useState<AppView>(AppView.INPUT);
+  const [view, setView] = useState<AppView>(AppView.SELECTION);
+  const [appMode, setAppMode] = useState<AppMode>('GENERAL');
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -53,7 +56,12 @@ const App: React.FC = () => {
     };
   }, [view]);
 
-  const handleAnalyze = async (text: string) => {
+  const handleSelectMode = (mode: AppMode) => {
+    setAppMode(mode);
+    setView(AppView.INPUT);
+  };
+
+  const handleGeneralAnalyze = async (text: string) => {
     setView(AppView.ANALYZING);
     setError(null);
     try {
@@ -67,9 +75,28 @@ const App: React.FC = () => {
     }
   };
 
+  const handleHostAnalyze = async (hostsData: string, participantsData: string) => {
+    setView(AppView.ANALYZING);
+    setError(null);
+    try {
+      const result = await analyzeHostPotential(hostsData, participantsData);
+      setResults(result);
+      setView(AppView.RESULTS);
+    } catch (err: any) {
+      console.error(err);
+      setError("Falha ao analisar os dados do Host. Tente novamente.");
+      setView(AppView.INPUT);
+    }
+  };
+
   const handleReset = () => {
     setResults(null);
-    setView(AppView.INPUT);
+    setView(AppView.SELECTION);
+    setError(null);
+  };
+
+  const handleBackToSelection = () => {
+    setView(AppView.SELECTION);
     setError(null);
   };
 
@@ -77,7 +104,7 @@ const App: React.FC = () => {
     <div className={`min-h-screen font-sans transition-colors duration-300 flex flex-col ${isDarkMode ? 'bg-black text-white selection:bg-verde-neon selection:text-black' : 'bg-gray-50 text-gray-900 selection:bg-emerald-100'}`}>
       <header className={`border-b sticky top-0 z-10 transition-colors duration-300 ${isDarkMode ? 'bg-chumbo-950 border-gray-800' : 'bg-white border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setView(AppView.SELECTION)}>
             <div className={`${isDarkMode ? 'bg-verde-neon text-black' : 'bg-emerald-600 text-white'} p-2 rounded-lg transition-colors`}>
               <Network className="h-6 w-6" />
             </div>
@@ -96,16 +123,34 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full flex flex-col">
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg flex items-center animate-pulse">
             <span className="mr-2">⚠️</span> {error}
           </div>
         )}
 
+        {view === AppView.SELECTION && (
+           <SelectionView onSelectMode={handleSelectMode} isDarkMode={isDarkMode} />
+        )}
+
         {view === AppView.INPUT && (
           <div className="animate-fade-in pt-1">
-            <InputView onAnalyze={handleAnalyze} isLoading={false} isDarkMode={isDarkMode} />
+            {appMode === 'GENERAL' ? (
+              <InputView 
+                onAnalyze={handleGeneralAnalyze} 
+                isLoading={false} 
+                isDarkMode={isDarkMode} 
+                onBack={handleBackToSelection}
+              />
+            ) : (
+              <HostInputView 
+                onAnalyze={handleHostAnalyze} 
+                isLoading={false} 
+                isDarkMode={isDarkMode} 
+                onBack={handleBackToSelection}
+              />
+            )}
           </div>
         )}
 
