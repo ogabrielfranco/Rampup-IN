@@ -30,13 +30,22 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  // Rotating loading messages
+  // Rotating loading messages randomly
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
     if (view === AppView.ANALYZING) {
-      setLoadingMessageIndex(0);
+      // Pick random start
+      setLoadingMessageIndex(Math.floor(Math.random() * LOADING_MESSAGES.length));
+      
       interval = setInterval(() => {
-        setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+        setLoadingMessageIndex((prev) => {
+          let next = Math.floor(Math.random() * LOADING_MESSAGES.length);
+          // Simple check to avoid immediate repetition if possible
+          while (next === prev && LOADING_MESSAGES.length > 1) {
+             next = Math.floor(Math.random() * LOADING_MESSAGES.length);
+          }
+          return next;
+        });
       }, 2500);
     }
     return () => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { AnalysisResult, Participant, IndividualScore } from '../types';
 import SeatingView from './SeatingView';
 import { 
@@ -200,6 +200,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
   // Filtering and Sorting State
   const [filterSegment, setFilterSegment] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const deferredSearchTerm = useDeferredValue(searchTerm); // Optimizes rendering for large lists
   const [sortField, setSortField] = useState<SortField>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -217,11 +218,15 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
       id: string; // Unique ID for key
     }> = [];
 
+    // Pre-map participants for O(1) lookup
+    const participantMap = new Map<string, Participant>();
+    data.participants.forEach(p => participantMap.set(p.id, p));
+
     data.individualScores.forEach(sourceScore => {
-      const sourceParticipant = getParticipant(sourceScore.participantId);
+      const sourceParticipant = participantMap.get(sourceScore.participantId);
       if (sourceParticipant && sourceScore.recommendedConnections) {
         sourceScore.recommendedConnections.forEach(rec => {
-          const targetParticipant = getParticipant(rec.partnerId);
+          const targetParticipant = participantMap.get(rec.partnerId);
           if (targetParticipant) {
              matches.push({
                p1: sourceParticipant,
@@ -244,8 +249,8 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
     let result = [...data.individualScores];
 
     // Search
-    if (searchTerm) {
-      const lowerTerm = searchTerm.toLowerCase();
+    if (deferredSearchTerm) {
+      const lowerTerm = deferredSearchTerm.toLowerCase();
       result = result.filter(score => {
          const p = getParticipant(score.participantId);
          if (!p) return false;
@@ -278,7 +283,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
     });
 
     return result;
-  }, [data.individualScores, filterSegment, searchTerm, sortField, sortDirection]);
+  }, [data.individualScores, filterSegment, deferredSearchTerm, sortField, sortDirection]);
 
   const uniqueSegments = useMemo(() => {
     return Array.from(new Set(data.participants.map(p => p.segment))).sort();
@@ -352,7 +357,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
     URL.revokeObjectURL(url);
   };
 
-  const sortedIndividuals = [...data.individualScores]
+  const sortedIndividuals = useMemo(() => [...data.individualScores]
     .sort((a, b) => b.score - a.score)
     .map(score => {
       const p = getParticipant(score.participantId);
@@ -363,11 +368,10 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
         connections: score.potentialConnections
       };
     })
-    .slice(0, 10);
+    .slice(0, 10), [data.individualScores]);
 
-  const sortedSegments = [...data.segmentDistribution].sort((a, b) => b.value - a.value);
+  const sortedSegments = useMemo(() => [...data.segmentDistribution].sort((a, b) => b.value - a.value), [data.segmentDistribution]);
   const totalParticipants = data.participants.length;
-  const totalUniqueSegments = uniqueSegments.length;
   
   const targetPercentage = 65;
   const isTargetMet = data.overallScore >= targetPercentage;
@@ -388,7 +392,8 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
       'mesa_u': 'Mesa em U',
       'mesa_t': 'Mesa em T',
       'recepcao': 'Recepção',
-      'buffet': 'Buffet'
+      'buffet': 'Buffet',
+      'custom': 'Livre'
     };
     return map[layout] || layout;
   };
@@ -592,12 +597,12 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ data, onReset, isDarkMode }
       {activeTab === 'matches' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
           {allDerivedMatches.length > 0 ? (
-            allDerivedMatches.map((match, idx) => {
-            const { p1, p2, score, reason } = match;
+            allDerivedMatches.map((match) => {
+            const { p1, p2, score, reason, id } = match;
             const isHighMatch = score >= 90;
 
             return (
-              <div key={idx} className={`group p-6 rounded-2xl border shadow-sm hover:shadow-xl transition-all relative overflow-hidden ${
+              <div key={id} className={`group p-6 rounded-2xl border shadow-sm hover:shadow-xl transition-all relative overflow-hidden ${
                 isDarkMode 
                   ? 'bg-chumbo-900 border-gray-800 hover:bg-gray-800/80' 
                   : 'bg-white border-gray-100 hover:border-emerald-200'

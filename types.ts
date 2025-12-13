@@ -27,7 +27,7 @@ export interface IndividualScore {
   recommendedConnections?: RecommendedConnection[]; // List of specific connections for this person
 }
 
-export type LayoutFormat = 'teatro' | 'sala_aula' | 'mesa_o' | 'conferencia' | 'mesa_u' | 'mesa_t' | 'recepcao' | 'buffet';
+export type LayoutFormat = 'teatro' | 'sala_aula' | 'mesa_o' | 'conferencia' | 'mesa_u' | 'mesa_t' | 'recepcao' | 'buffet' | 'custom';
 
 export interface AnalysisResult {
   overallScore: number; // 0-100

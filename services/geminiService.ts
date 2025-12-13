@@ -82,7 +82,7 @@ const analysisSchema: Schema = {
     },
     suggestedLayout: {
       type: Type.STRING,
-      enum: ['teatro', 'sala_aula', 'mesa_o', 'conferencia', 'mesa_u', 'mesa_t', 'recepcao', 'buffet'],
+      enum: ['teatro', 'sala_aula', 'mesa_o', 'conferencia', 'mesa_u', 'mesa_t', 'recepcao', 'buffet', 'custom'],
       description: "The best room layout based on participant count and networking goals."
     },
     seatingGroups: {
