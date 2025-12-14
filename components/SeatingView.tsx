@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AnalysisResult, LayoutFormat, Participant, IndividualScore } from '../types';
-import { LayoutDashboard, Users, User, ArrowRight, Grid, Monitor, Disc, Rows, RectangleHorizontal, Magnet, AlignJustify, Save, Filter, ChevronDown, Check, Image as ImageIcon, MousePointerClick, Eraser, Move, Plus, Crown, Circle, Square, Flower, DoorOpen } from 'lucide-react';
+import { LayoutDashboard, Users, User, ArrowRight, Grid, Monitor, Disc, Rows, RectangleHorizontal, Magnet, AlignJustify, Save, Filter, ChevronDown, Check, Image as ImageIcon, MousePointerClick, Eraser, Move, Plus, Crown, Circle, Square, Flower, DoorOpen, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 interface SeatingViewProps {
@@ -88,6 +88,9 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
     return (saved as LayoutFormat) || data.suggestedLayout;
   });
 
+  // Zoom State
+  const [zoomLevel, setZoomLevel] = useState(1);
+
   // Custom Layout State
   const [customObjects, setCustomObjects] = useState<CustomObject[]>([]);
   const [activeTool, setActiveTool] = useState<CustomObjectType | null>(null);
@@ -118,6 +121,10 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
     return matchesSegment && matchesScore;
   };
 
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 2));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
+  const handleResetZoom = () => setZoomLevel(1);
+
   const handleSaveLayout = () => {
     localStorage.setItem('rampup_saved_layout', selectedLayout);
     setShowSavedToast(true);
@@ -128,10 +135,13 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
     if (!mapRef.current) return;
     try {
       const canvas = await html2canvas(mapRef.current, {
-        scale: 2,
+        scale: 2, // Higher resolution
         backgroundColor: isDarkMode ? '#1a202c' : '#ffffff',
         useCORS: true,
-        logging: false
+        logging: false,
+        // Ensure the full scrollable content is captured
+        windowWidth: mapRef.current.scrollWidth,
+        windowHeight: mapRef.current.scrollHeight
       });
       const image = canvas.toDataURL("image/png");
       const link = document.createElement("a");
@@ -152,6 +162,7 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
     if ((e.target as HTMLElement) !== containerRef.current) return;
 
     const rect = containerRef.current!.getBoundingClientRect();
+    // Adjust coordinates based on zoom level
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -203,9 +214,9 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
     switch (selectedLayout) {
       case 'custom':
         return (
-          <div className="flex flex-col h-full min-h-[600px]">
+          <div className="flex flex-col h-full min-h-[600px] overflow-hidden relative">
              {/* Toolbar */}
-             <div className="flex flex-wrap items-center gap-2 mb-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+             <div className="flex flex-wrap items-center gap-2 mb-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-800 z-30 relative">
                 <span className="text-xs font-bold uppercase mr-2 opacity-50">Ferramentas:</span>
                 {TOOLBAR_ITEMS.map(item => (
                   <button
@@ -345,7 +356,7 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                     if (!p) return null;
                     const visible = checkVisibility(p);
                     return (
-                      <div key={id} className={`group/p relative transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-20'}`}>
+                      <div key={id} className={`group/p relative transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-20'} ${p.isHost ? 'z-20' : ''}`}>
                         <div className={`text-xs font-medium truncate py-1 px-2 rounded cursor-help transition-colors flex items-center justify-center gap-1 ${
                           p.isHost 
                           ? 'bg-amber-100 text-amber-800 font-bold border border-amber-200'
@@ -355,7 +366,7 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
                           {p.name}
                         </div>
                         {/* Hover Tooltip */}
-                        <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-max max-w-[150px] p-2 rounded text-[10px] hidden group-hover/p:block z-20 shadow-lg ${
+                        <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-max max-w-[150px] p-2 rounded text-[10px] hidden group-hover/p:block z-30 shadow-lg ${
                            isDarkMode ? 'bg-black text-white' : 'bg-gray-800 text-white'
                         }`}>
                           {p.company} • {p.segment} • IN: {getScore(p.id)}
@@ -371,8 +382,8 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
 
       case 'conferencia':
         return (
-           <div className="flex justify-center py-10 overflow-x-auto">
-             <div className={`relative min-w-[300px] w-full max-w-4xl rounded-xl border-4 flex flex-wrap content-center justify-center p-8 gap-4 ${
+           <div className="flex justify-start md:justify-center py-10 w-full">
+             <div className={`relative min-w-[800px] w-full max-w-4xl rounded-xl border-4 flex flex-wrap content-center justify-center p-8 gap-4 ${
                isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-emerald-50/50 border-emerald-800/20'
              }`}>
                 <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-sm font-bold ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-emerald-800 text-white'}`}>Mesa Principal</div>
@@ -412,8 +423,8 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         const rightSide = linearParticipants.slice(uSideCount + uTopCount);
 
         return (
-          <div className="flex justify-center p-4">
-             <div className="flex gap-4 items-start max-w-5xl w-full">
+          <div className="flex justify-start md:justify-center p-4 w-full">
+             <div className="flex gap-4 items-start min-w-[800px] w-full">
                 {/* Left Side (Vertical) */}
                 <div className="flex flex-col w-1/4 pt-16">
                    {leftSide.map((p, i) => <SeatCard key={p.id} p={p} idx={i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} score={getScore(p.id)} />)}
@@ -461,9 +472,9 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         const tLeg = linearParticipants.slice(tTopCount);
 
         return (
-          <div className="flex flex-col items-center p-4 min-h-[600px]">
+          <div className="flex flex-col items-center p-4 min-h-[600px] w-full">
              {/* Top Bar */}
-             <div className={`flex flex-wrap justify-center gap-2 p-4 rounded-xl border-2 mb-4 relative z-10 ${
+             <div className={`flex flex-wrap justify-center gap-2 p-4 rounded-xl border-2 mb-4 relative z-10 min-w-[600px] ${
                 isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-emerald-50/50 border-emerald-200'
              }`}>
                 {tTop.map((p, idx) => {
@@ -503,43 +514,45 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         const oLeftList = linearParticipants.slice(sideCount * 3);
 
         return (
-          <div className="flex flex-col items-center justify-center gap-4 p-8">
-            {/* Top Row */}
-            <div className="flex gap-2">
-              {oTopList.map((p, i) => (
-                <div key={p.id} className="w-24"><SeatCard p={p} idx={i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
-              ))}
-            </div>
+          <div className="flex justify-start md:justify-center p-8 w-full">
+            <div className="flex flex-col items-center justify-center gap-4 min-w-[800px]">
+                {/* Top Row */}
+                <div className="flex gap-2">
+                {oTopList.map((p, i) => (
+                    <div key={p.id} className="w-24"><SeatCard p={p} idx={i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
+                ))}
+                </div>
 
-            {/* Middle Section (Left Col, Void, Right Col) */}
-            <div className="flex justify-between w-full max-w-6xl">
-               {/* Left Column */}
-               <div className="flex flex-col gap-2">
-                 {oLeftList.map((p, i) => (
-                    <div key={p.id} className="w-48"><SeatCard p={p} idx={sideCount * 3 + i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
-                 ))}
-               </div>
+                {/* Middle Section (Left Col, Void, Right Col) */}
+                <div className="flex justify-between w-full max-w-6xl">
+                {/* Left Column */}
+                <div className="flex flex-col gap-2">
+                    {oLeftList.map((p, i) => (
+                        <div key={p.id} className="w-48"><SeatCard p={p} idx={sideCount * 3 + i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
+                    ))}
+                </div>
 
-               {/* The Void */}
-               <div className={`flex-1 mx-8 rounded-lg border-4 opacity-20 flex items-center justify-center ${
-                 isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-emerald-600 bg-emerald-50'
-               }`}>
-                 <span className="text-xl font-bold tracking-widest uppercase opacity-50">Mesa Central Vazia</span>
-               </div>
+                {/* The Void */}
+                <div className={`flex-1 mx-8 rounded-lg border-4 opacity-20 flex items-center justify-center ${
+                    isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-emerald-600 bg-emerald-50'
+                }`}>
+                    <span className="text-xl font-bold tracking-widest uppercase opacity-50">Mesa Central Vazia</span>
+                </div>
 
-               {/* Right Column */}
-               <div className="flex flex-col gap-2">
-                 {oRightList.map((p, i) => (
-                    <div key={p.id} className="w-48"><SeatCard p={p} idx={sideCount + i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
-                 ))}
-               </div>
-            </div>
+                {/* Right Column */}
+                <div className="flex flex-col gap-2">
+                    {oRightList.map((p, i) => (
+                        <div key={p.id} className="w-48"><SeatCard p={p} idx={sideCount + i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
+                    ))}
+                </div>
+                </div>
 
-            {/* Bottom Row */}
-            <div className="flex gap-2">
-              {oBottomList.map((p, i) => (
-                 <div key={p.id} className="w-24"><SeatCard p={p} idx={sideCount * 2 + i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
-              ))}
+                {/* Bottom Row */}
+                <div className="flex gap-2">
+                {oBottomList.map((p, i) => (
+                    <div key={p.id} className="w-24"><SeatCard p={p} idx={sideCount * 2 + i + 1} isDarkMode={isDarkMode} isDimmed={!checkVisibility(p)} /></div>
+                ))}
+                </div>
             </div>
           </div>
         );
@@ -556,9 +569,9 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
         }
 
         return (
-          <div className="flex flex-col items-center gap-8 py-8 min-h-[600px]">
+          <div className="flex flex-col items-center gap-8 py-8 min-h-[600px] w-full">
              {/* Stage / Board */}
-             <div className={`w-3/4 h-12 rounded-b-xl border-b-4 border-x-4 mb-8 flex items-center justify-center shadow-lg ${
+             <div className={`min-w-[500px] w-3/4 h-12 rounded-b-xl border-b-4 border-x-4 mb-8 flex items-center justify-center shadow-lg ${
                 isDarkMode ? 'border-gray-600 bg-gray-800 text-gray-400' : 'border-emerald-800 bg-emerald-900 text-emerald-100'
              }`}>
                <div className="flex items-center gap-2">
@@ -568,9 +581,9 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
              </div>
 
              {/* Rows of Desks */}
-             <div className="flex flex-col gap-6 w-full max-w-4xl px-4">
+             <div className="flex flex-col gap-6 w-full max-w-4xl px-4 min-w-[700px]">
                 {gridParticipants.map((row, rIdx) => (
-                   <div key={rIdx} className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                   <div key={rIdx} className="grid grid-cols-4 gap-4 w-full">
                       {row.map((p, cIdx) => (
                          <div key={p.id} className="w-full">
                             <SeatCard 
@@ -743,26 +756,28 @@ const SeatingView: React.FC<SeatingViewProps> = ({ data, isDarkMode }) => {
       </div>
 
       {/* Visualizer Area */}
-      <div ref={mapRef} className={`p-8 rounded-2xl border min-h-[500px] ${
+      <div className={`p-0 md:p-8 rounded-2xl border min-h-[500px] overflow-hidden ${
         isDarkMode ? 'bg-chumbo-800/50 border-gray-800' : 'bg-gray-50 border-gray-200'
       }`}>
-         <div className="flex justify-between items-center mb-8">
+         <div className="flex justify-between items-center mb-4 p-4 md:p-0">
             <h4 className={`font-bold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Visualização do Mapa</h4>
-            <div className="flex gap-4 text-xs">
-               <div className="flex items-center gap-1">
-                 <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-white border'}`}></div>
-                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Assento</span>
-               </div>
-               <div className="flex items-center gap-1">
-                 <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Host</span>
+            <div className="flex gap-4 items-center">
+               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                 <button onClick={handleZoomOut} className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"><ZoomOut className="w-4 h-4" /></button>
+                 <span className="text-xs font-mono w-10 text-center">{Math.round(zoomLevel * 100)}%</span>
+                 <button onClick={handleZoomIn} className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"><ZoomIn className="w-4 h-4" /></button>
+                 <button onClick={handleResetZoom} className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded ml-1 border-l border-gray-300 dark:border-gray-600"><Maximize className="w-4 h-4" /></button>
                </div>
             </div>
          </div>
-
-         {renderVisualMap()}
          
-         <div className={`mt-8 text-center text-xs italic ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+         <div ref={mapRef} className={`w-full overflow-x-auto overflow-y-hidden p-4 ${isDarkMode ? 'bg-chumbo-800/50' : 'bg-gray-50'}`}>
+            <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left', width: 'fit-content' }} className="transition-transform duration-200 ease-out">
+                {renderVisualMap()}
+            </div>
+         </div>
+         
+         <div className={`mt-4 mb-4 text-center text-xs italic ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
            * A distribuição dos assentos prioriza agrupar participantes com alta afinidade comercial conforme análise da IA.
            {(filterSegment || minScore > 0) && (
               <span className="block mt-1 font-bold text-yellow-500">

@@ -56,11 +56,11 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto animate-fade-in">
-      <div className="mb-6">
+    <div className="w-full max-w-4xl mx-auto animate-fade-in px-2 md:px-0">
+      <div className="mb-4 md:mb-6">
         <button 
           onClick={onBack}
-          className={`text-sm font-medium hover:underline ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+          className={`text-sm font-medium hover:underline flex items-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
         >
           &larr; Voltar para seleção
         </button>
@@ -72,16 +72,16 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
           : 'bg-white border-gray-300 shadow-[0_0_30px_rgba(59,130,246,0.1)]'
       }`}>
         {/* Header Area - Blue Tones for Host Mode */}
-        <div className={`p-8 text-center ${
+        <div className={`p-6 md:p-8 text-center ${
            isDarkMode 
              ? 'bg-gradient-to-br from-blue-900 via-indigo-900 to-gray-900' 
              : 'bg-gradient-to-br from-blue-800 via-indigo-700 to-blue-900'
         }`}>
-          <h1 className="text-3xl font-bold mb-2 tracking-tight text-white">Análise de Host</h1>
-          <p className="text-blue-100/90 font-medium">Descubra as melhores oportunidades para você ou sua empresa</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight text-white">Análise de Host</h1>
+          <p className="text-blue-100/90 text-sm md:text-base font-medium">Descubra as melhores oportunidades para você ou sua empresa</p>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div className="p-5 md:p-8 space-y-6 md:space-y-8">
           <div className="flex justify-end">
              <button 
                 onClick={handleDemo}
@@ -92,7 +92,7 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
               </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {/* Input 1: Hosts */}
             <div className="space-y-3">
                <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
                       : 'bg-white border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20'
                 }`}>
                   <textarea
-                    className={`w-full h-64 p-5 bg-transparent border-none focus:ring-0 text-sm font-mono leading-relaxed resize-none ${
+                    className={`w-full h-40 md:h-64 p-4 md:p-5 bg-transparent border-none focus:ring-0 text-sm font-mono leading-relaxed resize-none ${
                       isDarkMode ? 'text-gray-200 placeholder-gray-600' : 'text-gray-800 placeholder-gray-400'
                     }`}
                     placeholder={`Insira aqui os dados do anfitrião.\n\nExemplo:\nRoberto, Minha Empresa, Consultoria`}
@@ -145,7 +145,7 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
                       : 'bg-white border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20'
                 }`}>
                   <textarea
-                    className={`w-full h-64 p-5 bg-transparent border-none focus:ring-0 text-sm font-mono leading-relaxed resize-none ${
+                    className={`w-full h-40 md:h-64 p-4 md:p-5 bg-transparent border-none focus:ring-0 text-sm font-mono leading-relaxed resize-none ${
                       isDarkMode ? 'text-gray-200 placeholder-gray-600' : 'text-gray-800 placeholder-gray-400'
                     }`}
                     placeholder={`Cole a lista de empresários...\n\nExemplo:\nNome, Empresa, Segmento`}
@@ -153,7 +153,7 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
                     onChange={(e) => setParticipantsText(e.target.value)}
                   />
                   {participantsText && (
-                    <div className={`absolute bottom-3 right-3 text-xs px-2 py-1 rounded ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-500 shadow-sm border border-gray-200'}`}>
+                    <div className={`absolute bottom-3 right-3 text-[10px] md:text-xs px-2 py-1 rounded ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-500 shadow-sm border border-gray-200'}`}>
                       {participantsText.split('\n').filter(l => l.trim()).length} linhas
                     </div>
                   )}
@@ -165,7 +165,7 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
           <button
             onClick={() => onAnalyze(hostsText, participantsText)}
             disabled={!hostsText.trim() || !participantsText.trim() || isLoading}
-            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl flex items-center justify-center transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
+            className={`w-full py-3.5 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-xl flex items-center justify-center transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
               !hostsText.trim() || !participantsText.trim() || isLoading
                 ? isDarkMode ? 'bg-gray-800 text-gray-600 cursor-not-allowed shadow-none' : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200'
                 : isDarkMode 
@@ -188,16 +188,13 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
         </div>
         
         {/* Footer info */}
-        <div className={`px-8 py-4 text-center border-t ${isDarkMode ? 'bg-chumbo-950 border-gray-800 text-gray-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
-          <div className="flex items-center justify-center gap-2 text-xs font-medium">
-             <CheckCircle className="w-3 h-3" />
-             <span>Foco no Host</span>
-             <span className="mx-1">•</span>
-             <CheckCircle className="w-3 h-3" />
-             <span>Oportunidades Diretas</span>
-             <span className="mx-1">•</span>
-             <CheckCircle className="w-3 h-3" />
-             <span>Priorização Estratégica</span>
+        <div className={`px-4 md:px-8 py-4 text-center border-t ${isDarkMode ? 'bg-chumbo-950 border-gray-800 text-gray-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] md:text-xs font-medium">
+             <div className="flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Foco no Host</div>
+             <span className="hidden sm:inline mx-1">•</span>
+             <div className="flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Oportunidades Diretas</div>
+             <span className="hidden sm:inline mx-1">•</span>
+             <div className="flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Priorização Estratégica</div>
           </div>
         </div>
       </div>

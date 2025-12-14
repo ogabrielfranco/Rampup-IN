@@ -85,11 +85,11 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto animate-fade-in">
-      <div className="mb-6">
+    <div className="w-full max-w-3xl mx-auto animate-fade-in px-2 md:px-0">
+      <div className="mb-4 md:mb-6">
         <button 
           onClick={onBack}
-          className={`text-sm font-medium hover:underline ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+          className={`text-sm font-medium hover:underline flex items-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
         >
           &larr; Voltar para seleção
         </button>
@@ -102,21 +102,21 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
           : 'bg-white border-gray-300 shadow-[0_0_30px_rgba(16,185,129,0.1)]'
       }`}>
         {/* Header Area - Painted in Dark Green Tones as requested */}
-        <div className={`p-10 text-center ${
+        <div className={`p-6 md:p-10 text-center ${
            isDarkMode 
              ? 'bg-gradient-to-br from-green-900 via-emerald-900 to-gray-900' 
              : 'bg-gradient-to-br from-emerald-900 via-green-800 to-emerald-900'
         }`}>
-          <h1 className="text-3xl font-bold mb-2 tracking-tight text-white">Rampup IN</h1>
-          <p className="text-emerald-100/90 font-medium">Inteligência Artificial para análise de networking</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight text-white">Rampup IN</h1>
+          <p className="text-emerald-100/90 text-sm md:text-base font-medium">Inteligência Artificial para análise de networking</p>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div className="p-5 md:p-8 space-y-6 md:space-y-8">
           {/* Method Selection */}
-          <div className={`flex justify-center p-1 rounded-lg w-fit mx-auto ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100 border border-gray-200'}`}>
+          <div className={`flex justify-center p-1 rounded-lg w-full max-w-xs mx-auto ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100 border border-gray-200'}`}>
             <button
               onClick={() => setActiveMethod('paste')}
-              className={`flex items-center px-6 py-2 rounded-md text-sm font-semibold transition-all ${
+              className={`flex-1 flex justify-center items-center px-4 py-2 rounded-md text-sm font-semibold transition-all ${
                 activeMethod === 'paste' 
                   ? isDarkMode 
                     ? 'bg-chumbo-900 text-verde-light shadow-sm' 
@@ -131,7 +131,7 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
             </button>
             <button
               onClick={() => setActiveMethod('file')}
-              className={`flex items-center px-6 py-2 rounded-md text-sm font-semibold transition-all ${
+              className={`flex-1 flex justify-center items-center px-4 py-2 rounded-md text-sm font-semibold transition-all ${
                 activeMethod === 'file' 
                   ? isDarkMode 
                     ? 'bg-chumbo-900 text-verde-light shadow-sm' 
@@ -150,13 +150,13 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
           <div className="transition-all duration-300">
             {activeMethod === 'paste' ? (
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                    <label className={`block text-sm font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-emerald-800/70'}`}>
                     Dados dos Participantes
                   </label>
                    <button 
                     onClick={handleDemo}
-                    className={`text-xs font-medium flex items-center transition-colors px-3 py-1 rounded-full ${isDarkMode ? 'bg-gray-800 text-verde-light hover:bg-gray-700' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+                    className={`text-xs font-medium flex items-center transition-colors px-3 py-1 rounded-full w-full sm:w-auto justify-center ${isDarkMode ? 'bg-gray-800 text-verde-light hover:bg-gray-700' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
                   >
                     <Database className="w-3 h-3 mr-1.5" />
                     Carregar Exemplo
@@ -169,7 +169,7 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
                       : 'bg-white border-gray-300 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/20'
                 }`}>
                   <textarea
-                    className={`w-full h-64 p-5 bg-transparent border-none focus:ring-0 text-sm font-mono leading-relaxed resize-none ${
+                    className={`w-full h-48 md:h-64 p-4 md:p-5 bg-transparent border-none focus:ring-0 text-sm font-mono leading-relaxed resize-none ${
                       isDarkMode ? 'text-gray-200 placeholder-gray-600' : 'text-gray-800 placeholder-gray-400'
                     }`}
                     placeholder={`Cole aqui sua lista...\n\nExemplo:\nNome, Empresa, Segmento`}
@@ -177,22 +177,22 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
                     onChange={(e) => setInputText(e.target.value)}
                   />
                   {inputText && (
-                    <div className={`absolute bottom-3 right-3 text-xs px-2 py-1 rounded ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-500 shadow-sm border border-gray-200'}`}>
+                    <div className={`absolute bottom-3 right-3 text-[10px] md:text-xs px-2 py-1 rounded ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-500 shadow-sm border border-gray-200'}`}>
                       {inputText.split('\n').filter(l => l.trim()).length} linhas detectadas
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className={`border-2 border-dashed rounded-xl p-12 text-center transition-all group ${
+              <div className={`border-2 border-dashed rounded-xl p-8 md:p-12 text-center transition-all group ${
                   isDarkMode 
                   ? 'border-gray-700 hover:border-verde-light/50 hover:bg-gray-800' 
                   : 'border-gray-300 hover:border-emerald-500 hover:bg-gray-50'
                 }`}>
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center transition-colors ${
+                <div className={`w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-full flex items-center justify-center transition-colors ${
                   isDarkMode ? 'bg-gray-800 group-hover:bg-gray-700' : 'bg-gray-100 group-hover:bg-emerald-50'
                 }`}>
-                   <Upload className={`w-8 h-8 ${isDarkMode ? 'text-gray-400 group-hover:text-verde-light' : 'text-gray-400 group-hover:text-emerald-600'}`} />
+                   <Upload className={`w-6 h-6 md:w-8 md:h-8 ${isDarkMode ? 'text-gray-400 group-hover:text-verde-light' : 'text-gray-400 group-hover:text-emerald-600'}`} />
                 </div>
                 <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Upload de Arquivo</h3>
                 <p className={`text-sm mt-1 mb-6 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Suporta arquivos .CSV ou .TXT</p>
@@ -222,7 +222,7 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
           <button
             onClick={() => onAnalyze(inputText)}
             disabled={!inputText.trim() || isLoading}
-            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl flex items-center justify-center transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
+            className={`w-full py-3.5 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-xl flex items-center justify-center transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
               !inputText.trim() || isLoading
                 ? isDarkMode ? 'bg-gray-800 text-gray-600 cursor-not-allowed shadow-none' : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200'
                 : isDarkMode 
@@ -245,16 +245,13 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
         </div>
         
         {/* Footer info */}
-        <div className={`px-8 py-4 text-center border-t ${isDarkMode ? 'bg-chumbo-950 border-gray-800 text-gray-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
-          <div className="flex items-center justify-center gap-2 text-xs font-medium">
-             <CheckCircle className="w-3 h-3" />
-             <span>Análise Semântica</span>
-             <span className="mx-1">•</span>
-             <CheckCircle className="w-3 h-3" />
-             <span>Matching Inteligente</span>
-             <span className="mx-1">•</span>
-             <CheckCircle className="w-3 h-3" />
-             <span>Score Preditivo</span>
+        <div className={`px-4 md:px-8 py-4 text-center border-t ${isDarkMode ? 'bg-chumbo-950 border-gray-800 text-gray-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] md:text-xs font-medium">
+             <div className="flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Análise Semântica</div>
+             <span className="hidden sm:inline mx-1">•</span>
+             <div className="flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Matching Inteligente</div>
+             <span className="hidden sm:inline mx-1">•</span>
+             <div className="flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Score Preditivo</div>
           </div>
         </div>
       </div>
