@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Play, Database, CheckCircle, UserCircle, Users } from 'lucide-react';
+import { Upload, Play, Database, CheckCircle, UserCircle, Users, Calendar, Clock, FileText } from 'lucide-react';
 
 interface HostInputViewProps {
   onAnalyze: (hostsData: string, participantsData: string) => void;
@@ -8,8 +8,8 @@ interface HostInputViewProps {
   onBack: () => void;
 }
 
-const DEMO_HOST = `Host 1: Roberto Justus, SteelCorp, Indústria de Aço e Construção
-Host 2: Luiza Trajano, Magalu, Varejo e E-commerce`;
+const DEMO_HOST = `Host 1: Luiza Trajano, Magalu, Varejo e E-commerce
+Host 2: Caito Maia, Chilli Beans, Ótica, Franquias e Moda`;
 
 const DEMO_PARTICIPANTS = `1. João Silva, Construtora Silva, Construção Civil
 2. Maria Souza, Souza Transportes, Logística
@@ -37,8 +37,14 @@ const DEMO_PARTICIPANTS = `1. João Silva, Construtora Silva, Construção Civil
 const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isDarkMode, onBack }) => {
   const [hostsText, setHostsText] = useState('');
   const [participantsText, setParticipantsText] = useState('');
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
 
   const handleDemo = () => {
+    setEventName('Masterclass de Varejo & Franquias');
+    setEventDate('2025-10-25');
+    setEventTime('19:00');
     setHostsText(DEMO_HOST);
     setParticipantsText(DEMO_PARTICIPANTS);
   };
@@ -53,6 +59,18 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
       };
       reader.readAsText(file);
     }
+  };
+
+  const handleAnalyzeClick = () => {
+    // Combine context into the host data string for the AI
+    const contextHeader = `CONTEXTO DA AGENDA:
+Evento: ${eventName || 'N/A'}
+Data: ${eventDate || 'N/A'}
+Horário: ${eventTime || 'N/A'}
+--------------------------------`;
+    
+    const finalHostsData = `${contextHeader}\n\n${hostsText}`;
+    onAnalyze(finalHostsData, participantsText);
   };
 
   return (
@@ -88,8 +106,57 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
                 className={`text-xs font-medium flex items-center transition-colors px-3 py-1 rounded-full ${isDarkMode ? 'bg-gray-800 text-blue-300 hover:bg-gray-700' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
               >
                 <Database className="w-3 h-3 mr-1.5" />
-                Carregar Exemplo (20+ Participantes)
+                Carregar Exemplo (Luiza Trajano & Caito Maia)
               </button>
+          </div>
+
+          {/* Agenda Details Section */}
+          <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+             <h3 className={`text-sm font-bold uppercase mb-4 flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <FileText className="w-4 h-4" /> Detalhes da Agenda
+             </h3>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                   <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Nome da Agenda / Evento</label>
+                   <input 
+                      type="text" 
+                      placeholder="Ex: Jantar de Negócios"
+                      value={eventName}
+                      onChange={(e) => setEventName(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                         isDarkMode ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                   />
+                </div>
+                <div>
+                   <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Data</label>
+                   <div className="relative">
+                      <Calendar className={`absolute left-3 top-2.5 w-4 h-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                      <input 
+                         type="date" 
+                         value={eventDate}
+                         onChange={(e) => setEventDate(e.target.value)}
+                         className={`w-full pl-10 pr-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                            isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                         }`}
+                      />
+                   </div>
+                </div>
+                <div>
+                   <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Horário</label>
+                   <div className="relative">
+                      <Clock className={`absolute left-3 top-2.5 w-4 h-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                      <input 
+                         type="time" 
+                         value={eventTime}
+                         onChange={(e) => setEventTime(e.target.value)}
+                         className={`w-full pl-10 pr-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                            isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                         }`}
+                      />
+                   </div>
+                </div>
+             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
@@ -163,7 +230,7 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
 
           {/* Action Button */}
           <button
-            onClick={() => onAnalyze(hostsText, participantsText)}
+            onClick={handleAnalyzeClick}
             disabled={!hostsText.trim() || !participantsText.trim() || isLoading}
             className={`w-full py-3.5 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-xl flex items-center justify-center transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
               !hostsText.trim() || !participantsText.trim() || isLoading

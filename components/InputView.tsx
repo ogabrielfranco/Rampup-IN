@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent } from 'react';
 import { Upload, FileText, Play, Database, CheckCircle } from 'lucide-react';
+import { LOGO_URL } from '../App';
 
 interface InputViewProps {
   onAnalyze: (data: string) => void;
@@ -107,7 +108,16 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
              ? 'bg-gradient-to-br from-green-900 via-emerald-900 to-gray-900' 
              : 'bg-gradient-to-br from-emerald-900 via-green-800 to-emerald-900'
         }`}>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight text-white">Rampup IN</h1>
+          <div className="flex flex-col items-center justify-center mb-4">
+             <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm mb-3">
+               <img 
+                 src={LOGO_URL} 
+                 alt="Rampup Business" 
+                 className="h-8 md:h-10 w-auto brightness-0 invert" 
+               />
+             </div>
+             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Rampup IN</h1>
+          </div>
           <p className="text-emerald-100/90 text-sm md:text-base font-medium">Inteligência Artificial para análise de networking</p>
         </div>
 

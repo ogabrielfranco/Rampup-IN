@@ -104,11 +104,19 @@ export const analyzeNetworkingData = async (rawData: string): Promise<AnalysisRe
     
     **Task:** Calculate the "Rampup IN" (Business Index) for networking synergy.
     
-    **Rules:**
-    1. Parse participants.
-    2. Identify relationships: Supply Chain (High), B2B Services (High/Med), Complementary (Med), Peers (Low).
-    3. Calculate scores based on the value each person brings to others in the room.
-    4. Suggest layout and seating groups.
+    **Deep Analysis Instructions:**
+    1. **Parse & Enrich:** Identify participants, their companies, and segments.
+    2. **Strategic Matching:** Identify relationships based on Value Chains. Look for:
+       - **Supply Chain:** Who buys from whom?
+       - **B2B Services:** Who provides essential services (Legal, Financial, Tech) to whom?
+       - **Complementary:** Who targets the same customer base but doesn't compete (e.g., Event Planner + Photographer)?
+    3. **Trend Analysis:** Consider current market trends (e.g., Digital Transformation, ESG, AI adoption). If a company is in "Tech", they are high value to "Traditional Retail" looking to modernize.
+    4. **Business Goals Inference:** Infer likely business goals based on company descriptions (e.g., A "Startup" likely needs "Capital" or "Mentorship").
+
+    **Output Requirements:**
+    - The 'reason' for connections must be **specific and granular**. Avoid generic phrases like "Same segment". Instead use: "Company A's logistics services can optimize Company B's e-commerce supply chain."
+    - Calculate scores based on the *strategic value* each person brings to the specific room composition.
+    - Suggest layout and seating groups that maximize these high-value transactions.
     
     Return strict JSON matching the schema.
     
@@ -127,23 +135,23 @@ export const analyzeHostPotential = async (hostsData: string, participantsData: 
       We have one or more HOSTS (the organizers or main VIPs) and a list of GUESTS (participants).
   
       **Goal:**
-      Analyze how valuable the GUESTS are specifically for the HOSTS. 
-      The "Individual Score" for the HOSTS should reflect how many opportunities exist for them in the room.
-      The "Individual Score" for the GUESTS should reflect how valuable they are to the HOST.
+      Analyze how valuable the GUESTS are specifically for the HOSTS based on business goals and industry fit.
   
+      **Deep Analysis Instructions:**
+      1. **Host Profile:** Understand the Host's business model deeply. What do they sell? Who do they need?
+      2. **Priority Analysis:** 
+         - **Sales Targets:** Guests who fit the Host's Ideal Customer Profile (ICP).
+         - **Strategic Partners:** Guests who can amplify the Host's reach.
+         - **Trend Alignment:** Guests operating in high-growth sectors relevant to the Host.
+      3. **Granular Reasoning:** The 'reason' field MUST explain *why* this is good for the Host. E.g., "Guest X represents a major retail account for Host's logistics solution."
+      4. **Seating:** Ensure HOSTS are seated with their highest value targets (High scores).
+      
       **Inputs:**
       HOSTS DATA:
       ${hostsData}
   
       GUESTS DATA:
       ${participantsData}
-  
-      **Instructions:**
-      1. Parse both lists. Mark HOSTS with 'isHost: true'.
-      2. **Priority Analysis:** Focus heavily on finding matches where the HOST sells to the Guest, or the Guest sells something strategic to the Host, or they are partners.
-      3. **Top Matches:** The 'topMatches' array MUST prioritize connections involving at least one HOST.
-      4. **Seating:** Ensure HOSTS are seated with their highest value targets (High scores).
-      5. **Overall Score:** This now represents the "Success Probability for the Host".
   
       Return strict JSON matching the schema.
     `;

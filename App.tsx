@@ -16,12 +16,14 @@ const LOADING_MESSAGES = [
   "Finalizando a matriz de oportunidades..."
 ];
 
+export const LOGO_URL = "https://lh3.googleusercontent.com/pw/AP1GczMP2TMLrL7jJinfgjlYoQwz5k6p6fQNHEo6tdX1nN_Wo1jId1OkfiTaNAPpXGRYUElU2dT2QaGtOXciVla2W1-wRRqNBGiYSIPbMuSKlgiaalAGG0dlo96PIPo6hqD5LTPYdRWZepZJIdyXpokc6lsJ=w969-h387-s-no-gm?authuser=0";
+
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.SELECTION);
   const [appMode, setAppMode] = useState<AppMode>('GENERAL');
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to Dark Mode
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   // Apply dark mode class to html element
@@ -102,14 +104,19 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 flex flex-col ${isDarkMode ? 'bg-black text-white selection:bg-verde-neon selection:text-black' : 'bg-gray-50 text-gray-900 selection:bg-emerald-100'}`}>
-      <header className={`border-b sticky top-0 z-10 transition-colors duration-300 ${isDarkMode ? 'bg-chumbo-950 border-gray-800' : 'bg-white border-gray-200'}`}>
+      <header className={`border-b sticky top-0 z-50 transition-colors duration-300 ${isDarkMode ? 'bg-chumbo-950 border-gray-800' : 'bg-white border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setView(AppView.SELECTION)}>
-            <div className={`${isDarkMode ? 'bg-verde-neon text-black' : 'bg-emerald-600 text-white'} p-2 rounded-lg transition-colors`}>
-              <Network className="h-6 w-6" />
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView(AppView.SELECTION)}>
+            <div className={`flex items-center justify-center p-1 rounded-md h-10 w-auto ${isDarkMode ? 'bg-transparent' : 'bg-white'}`}>
+               <img 
+                 src={LOGO_URL} 
+                 alt="Rampup Business" 
+                 className={`h-full w-auto object-contain ${isDarkMode ? 'brightness-0 invert' : ''}`} 
+               />
             </div>
+            <div className={`h-6 w-px ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
             <span className={`text-xl font-bold bg-clip-text text-transparent ${isDarkMode ? 'bg-gradient-to-r from-white to-gray-400' : 'bg-gradient-to-r from-gray-900 to-gray-600'}`}>
-              Rampup IN
+              IN
             </span>
           </div>
           
@@ -178,8 +185,17 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className={`py-6 text-center text-sm font-medium border-t transition-colors ${isDarkMode ? 'bg-chumbo-950 border-gray-800 text-gray-500' : 'bg-white border-gray-200 text-gray-400'}`}>
-        <p>Pensado e desenvolvido pela Rampup Business</p>
+      <footer className={`py-8 text-center border-t transition-colors ${isDarkMode ? 'bg-chumbo-950 border-gray-800' : 'bg-white border-gray-200'}`}>
+        <div className="flex flex-col items-center justify-center gap-3">
+           <img 
+             src={LOGO_URL} 
+             alt="Rampup Business" 
+             className={`h-8 opacity-70 hover:opacity-100 transition-all ${isDarkMode ? 'brightness-0 invert' : 'grayscale hover:grayscale-0'}`} 
+           />
+           <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+             Pensado e desenvolvido pela Rampup Business
+           </p>
+        </div>
       </footer>
     </div>
   );
