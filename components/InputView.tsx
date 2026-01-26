@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent } from 'react';
-import { Upload, FileText, Play, Database, CheckCircle } from 'lucide-react';
+import { Upload, FileText, Play, Database, CheckCircle, Calendar, Clock } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { LOGO_URL } from '../App';
 
 interface InputViewProps {
@@ -9,80 +10,106 @@ interface InputViewProps {
   onBack: () => void;
 }
 
-const DEMO_DATA = `Evento: Summit de Negócios Brasil 2025
+const DEMO_DATA = `Evento: Rampup Talks 2026
 
-1. João Silva, JS Marketing, Marketing Digital
-2. Maria Souza, Souza Imóveis, Imobiliária
-3. Carlos Pereira, TechDev Solutions, Desenvolvimento de Software
-4. Ana Oliveira, Oliveira Doces Finos, Confeitaria e Buffet
-5. Pedro Santos, Santos Engenharia, Construção Civil
-6. Lucia Costa, Costa Contabilidade, Contabilidade
-7. Marcos Lima, Lima Shop, E-commerce de Eletrônicos
-8. Fernanda Rocha, Rocha & Associados, Jurídico Trabalhista
-9. Roberto Almeida, Almeida Seguros, Corretora de Seguros
-10. Juliana Dias, Finanças 360, Consultoria Financeira
-11. Eduardo Mello, Mello Ads, Gestão de Tráfego Pago
-12. Sofia Nunes, Nunes Odonto, Clínica Odontológica
-13. Rafael Torres, Torres Fitness, Academia
-14. Beatriz Gomes, Studio Bea, Arquitetura e Interiores
-15. Lucas Martins, Martins Log, Logística e Transporte
-16. Gabriela Ferreira, Gabi Modas, Varejo de Moda Feminina
-17. Felipe Barbosa, Barbosa Tech, Suporte de TI
-18. Renata Carvalho, Carvalho Eventos, Cerimonialista
-19. Thiago Rodrigues, Rodrigues Solar, Energia Solar
-20. Camila Alves, NutriVida, Nutrição Clínica
-21. Bruno Cardoso, Cardoso Automação, Automação Residencial
-22. Vanessa Lima, Estética Vanessa, Clínica de Estética
-23. Rodrigo Faria, Faria Imóveis, Imobiliária Comercial
-24. Patrícia Castro, Castro Idiomas, Escola de Inglês
-25. Marcelo Ribeiro, Ribeiro Motors, Oficina Mecânica Premium
-26. Aline Mendes, AM Design, Design Gráfico e Branding
-27. Gustavo Henrique, GH Produções, Produção de Vídeo
-28. Letícia Duarte, Duarte RH, Recrutamento e Seleção
-29. André Vieira, Vieira Consultoria, Consultoria Empresarial
-30. Mônica Santana, Santana Viagens, Agência de Turismo
-31. Ricardo Pinto, Pinto & Filhos, Material de Construção
-32. Cláudia Teixeira, Teixeira Psicologia, Psicologia Organizacional
-33. Fernando Moura, Moura Café, Cafeteria Gourmet
-34. Tatiane Ramos, Ramos Semijoias, Venda de Acessórios
-35. Igor Santos, Santos Web, Criação de Sites
-36. Larissa Campos, Campos Veterinária, Clínica Veterinária
-37. Diego Moreira, Moreira Barber, Barbearia
-38. Paula Nogueira, Nogueira Doces, Bolos Artísticos
-39. Vinícius Azevedo, Azevedo Import, Importação
-40. Sara Costa, Costa Coworking, Espaço de Coworking
-41. Otávio Guimarães, Guimarães Têxtil, Indústria Têxtil
-42. Helena Batista, Batista Clean, Limpeza Comercial
-43. Cauã Freitas, Freitas Print, Gráfica Rápida
-44. Isabela Matos, Matos Coaching, Coaching de Carreira
-45. Samuel Lopes, Lopes Security, Segurança Eletrônica
-46. Luana Correia, Correia Crafts, Artesanato de Luxo
-47. Davi Araújo, Araújo Burger, Hamburgueria Artesanal
-48. Lorena Soares, Soares Pilates, Studio de Pilates
-49. Matheus Cunha, Cunha Invest, Assessoria de Investimentos
-50. Bianca Neves, Neves Makeup, Maquiadora Profissional
-51. Renan Sales, Sales Eletro, Instalações Elétricas`;
+Nome	EMPRESA	Segmento
+Aliriana Frota lima	Frota Cavalcante odontologia	Saude
+Andre Souza	Simplifica Gestão	CRM SAAS
+ANDRE COSTA MATOS LIMA	Lithos	Saude
+Carla Matos	Vsm	Comunicação
+Carlos Mororó	Grupo CAMARMO	Recrutamento e Carreira
+David Girao	Betania	Indústria
+DEILIANE ALMEIDA	UNIMED FORTALEZA	Plano de SAÚDE
+Diego Mourão Silva	escandi branding	Empresa Branding
+Drayton Jaime	LIDE	Grupo de Acesso a Empresários do Pernambuco
+Eduardo Hamdan	Gomes de Matos	Consultoria e Gestão
+Eduardo Gomes	Gomes de Matos	Consultoria e Gestão
+Fabio Ozorio	FABIO OZORIO ADVOGADOS ASSOCIADOS	Advocacia
+Flavia Falcão	Inovar Marketing Olfativo	Marketing Olfativo
+Flavio Sobral	Brasterra	Investimento Imobiliario
+FRANCISO ALDAIRTON RIBEIRO	ALDAIRTON CARVALHO SOCIEDADE DE ADVGADOS	ADVOCACIA
+Graziele Nobre	Grupo Camarmo	Serviços
+Helaine Tahim	FORTES TECNOLOGIA	TECNOLOGIA E SISTEMAS
+Hueliton Sampaio	Profectum | Nexo	TI
+Hueliton Sampaio	Profectum	Tecnologia
+JANSEN ARAUJO	Compasso Comunicação e Marketing	Midia Exterior
+Jelena Todorovic	Basquete Cearense	Esportes
+Jonathan Magalhães	JONMAG	Investimentos e Renda Passiva
+Jorge Cysne	FORTES TECNOLOGIA	TECNOLOGIA
+Jorio da Escossia	Jorío da Escossia	Saúde odontológica
+José Neto	Polo empresarial Porto do Pecém	Loteamento para Industria
+Lucas Uchoa	Somapay	BANCO. E FOLHA DE PAGAMENTO
+Luis Nunes	Brasterra	Construção
+Marcus Candeai	Goener	Energia
+Mariana Matos	Unimed Fortaleza	Saúde
+MARLYSON NOBRE	NOBRECON	CONTABILIDADE
+Nayana Branco	SOMAPAY	BANCO. E FOLHA DE PAGAMENTO
+PAULO OLIVEIRA	Inovar Marketing Olfativo	Marketing Olfativo
+Paulo César Baltazar Viana Filho	Grupo Protemaxi	Facilities e Segurança
+Ramon Pessoa	R7	Treinamentos Time Comercial
+Roberto Araújo	Iniciativa assessoria e consultoria Empresarial	Assessoria e consultoria Empresarial
+Rodrigo Cunha	Romazi	Indústria Tomadas
+Samir Bayde	NEOTECH	Construção Modular
+Samuel Cavalcante Benevides pessoa	Frota Cavalcante odontologia	Saude
+Sayde Bayde	HOWBE	TECNOLOGIA
+Sergio Rolim	SAL ENERGIA	Energia por assinatura
+Thalis Braga	Basquete Cearense	Esporte
+Victor Fernandes	Yellow Energy	Energia por assinatura
+victor maia	Comercial Maia	Distribuidora de material para construção`;
 
 const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode, onBack }) => {
   const [inputText, setInputText] = useState('');
   const [activeMethod, setActiveMethod] = useState<'paste' | 'file'>('paste');
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        setInputText(text);
-        setActiveMethod('paste'); // Switch to view content
-      };
-      reader.readAsText(file);
+      const fileType = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileType === 'xlsx' || fileType === 'xls') {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const csvText = XLSX.utils.sheet_to_csv(worksheet);
+          setInputText(csvText);
+          setActiveMethod('paste');
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const text = event.target?.result as string;
+          setInputText(text);
+          setActiveMethod('paste');
+        };
+        reader.readAsText(file);
+      }
     }
   };
 
   const handleDemo = () => {
+    setEventName('Rampup Talks 2026');
+    setEventDate('2026-01-29');
+    setEventTime('18:00');
     setInputText(DEMO_DATA);
     setActiveMethod('paste');
+  };
+
+  const handleAnalyzeClick = () => {
+    const contextHeader = `CONTEXTO DA AGENDA:
+Evento: ${eventName || 'N/A'}
+Data: ${eventDate || 'N/A'}
+Horário: ${eventTime || 'N/A'}
+--------------------------------`;
+    
+    const finalData = `${contextHeader}\n\n${inputText}`;
+    onAnalyze(finalData);
   };
 
   return (
@@ -96,13 +123,11 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
         </button>
       </div>
 
-      {/* Container with stylized green tones */}
       <div className={`rounded-2xl shadow-xl overflow-hidden border-2 transition-all duration-300 ${
         isDarkMode 
           ? 'bg-gray-900 border-verde-light/40 shadow-[0_0_25px_rgba(74,222,128,0.1)]' 
           : 'bg-white border-gray-300 shadow-[0_0_30px_rgba(16,185,129,0.1)]'
       }`}>
-        {/* Header Area - Painted in Dark Green Tones as requested */}
         <div className={`p-6 md:p-10 text-center ${
            isDarkMode 
              ? 'bg-gradient-to-br from-green-900 via-emerald-900 to-gray-900' 
@@ -122,7 +147,65 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
         </div>
 
         <div className="p-5 md:p-8 space-y-6 md:space-y-8">
-          {/* Method Selection */}
+          <div className="flex justify-end">
+             <button 
+                onClick={handleDemo}
+                className={`text-xs font-medium flex items-center transition-colors px-3 py-1 rounded-full ${isDarkMode ? 'bg-gray-800 text-verde-light hover:bg-gray-700' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+              >
+                <Database className="w-3 h-3 mr-1.5" />
+                Carregar Exemplo
+              </button>
+          </div>
+
+          {/* Agenda Details Section */}
+          <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+             <h3 className={`text-sm font-bold uppercase mb-4 flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <FileText className="w-4 h-4" /> Detalhes da Agenda
+             </h3>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-1">
+                   <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Nome da Agenda / Evento</label>
+                   <input 
+                      type="text" 
+                      placeholder="Ex: Almoço de Networking"
+                      value={eventName}
+                      onChange={(e) => setEventName(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${
+                         isDarkMode ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                   />
+                </div>
+                <div>
+                   <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Data</label>
+                   <div className="relative">
+                      <Calendar className={`absolute left-3 top-2.5 w-4 h-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                      <input 
+                         type="date" 
+                         value={eventDate}
+                         onChange={(e) => setEventDate(e.target.value)}
+                         className={`w-full pl-10 pr-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${
+                            isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                         }`}
+                      />
+                   </div>
+                </div>
+                <div>
+                   <label className={`block text-xs font-medium mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Horário</label>
+                   <div className="relative">
+                      <Clock className={`absolute left-3 top-2.5 w-4 h-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                      <input 
+                         type="time" 
+                         value={eventTime}
+                         onChange={(e) => setEventTime(e.target.value)}
+                         className={`w-full pl-10 pr-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${
+                            isDarkMode ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                         }`}
+                      />
+                   </div>
+                </div>
+             </div>
+          </div>
+
           <div className={`flex justify-center p-1 rounded-lg w-full max-w-xs mx-auto ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100 border border-gray-200'}`}>
             <button
               onClick={() => setActiveMethod('paste')}
@@ -156,23 +239,12 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
             </button>
           </div>
 
-          {/* Input Area */}
           <div className="transition-all duration-300">
             {activeMethod === 'paste' ? (
               <div className="space-y-3">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                   <label className={`block text-sm font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-emerald-800/70'}`}>
-                    Dados dos Participantes
-                  </label>
-                   <button 
-                    onClick={handleDemo}
-                    className={`text-xs font-medium flex items-center transition-colors px-3 py-1 rounded-full w-full sm:w-auto justify-center ${isDarkMode ? 'bg-gray-800 text-verde-light hover:bg-gray-700' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
-                  >
-                    <Database className="w-3 h-3 mr-1.5" />
-                    Carregar Exemplo
-                  </button>
-                </div>
-                
+                <label className={`block text-sm font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-emerald-800/70'}`}>
+                  Dados dos Participantes
+                </label>
                 <div className={`relative rounded-xl border-2 transition-all ${
                    isDarkMode 
                       ? 'bg-gray-800 border-gray-700 focus-within:border-verde-light/50' 
@@ -205,11 +277,11 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
                    <Upload className={`w-6 h-6 md:w-8 md:h-8 ${isDarkMode ? 'text-gray-400 group-hover:text-verde-light' : 'text-gray-400 group-hover:text-emerald-600'}`} />
                 </div>
                 <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Upload de Arquivo</h3>
-                <p className={`text-sm mt-1 mb-6 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Suporta arquivos .CSV ou .TXT</p>
+                <p className={`text-sm mt-1 mb-6 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Suporta arquivos .XLSX, .CSV ou .TXT</p>
                 
                 <input 
                   type="file" 
-                  accept=".csv,.txt"
+                  accept=".csv,.txt,.xlsx,.xls"
                   onChange={handleFileUpload}
                   className="hidden" 
                   id="file-upload"
@@ -228,9 +300,8 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
             )}
           </div>
 
-          {/* Action Button - Stylized Green */}
           <button
-            onClick={() => onAnalyze(inputText)}
+            onClick={handleAnalyzeClick}
             disabled={!inputText.trim() || isLoading}
             className={`w-full py-3.5 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-xl flex items-center justify-center transition-all transform hover:scale-[1.01] active:scale-[0.99] ${
               !inputText.trim() || isLoading
@@ -254,7 +325,6 @@ const InputView: React.FC<InputViewProps> = ({ onAnalyze, isLoading, isDarkMode,
           </button>
         </div>
         
-        {/* Footer info */}
         <div className={`px-4 md:px-8 py-4 text-center border-t ${isDarkMode ? 'bg-chumbo-950 border-gray-800 text-gray-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
           <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] md:text-xs font-medium">
              <div className="flex items-center"><CheckCircle className="w-3 h-3 mr-1" /> Análise Semântica</div>

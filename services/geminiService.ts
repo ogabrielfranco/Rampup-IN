@@ -1,11 +1,15 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+
+import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResult } from "../types";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const modelName = "gemini-2.5-flash";
+// Select gemini-3-pro-preview for complex reasoning and strategic business matching.
+const modelName = "gemini-3-pro-preview";
 
-const analysisSchema: Schema = {
+// Define the response schema as a plain object using the Type enum.
+const analysisSchema = {
   type: Type.OBJECT,
   properties: {
     overallScore: {
@@ -49,8 +53,13 @@ const analysisSchema: Schema = {
                 partnerId: { type: Type.STRING },
                 score: { type: Type.NUMBER, description: "Match strength 0-100" },
                 reason: { type: Type.STRING, description: "Specific business reason for this connection (e.g., 'Supplier-Client relationship', 'Complementary services')." }
+                type: { 
+                  type: Type.STRING, 
+                  enum: ["buyer", "seller", "partner"],
+                  description: "Categorize as: 'buyer' (the partner is a potential customer for this participant), 'seller' (the partner is a potential supplier for this participant), or 'partner' (strategic partnership/referral)."
+                }
               },
-              required: ["partnerId", "score", "reason"]
+              required: ["partnerId", "score", "reason", "type"]
             }
           }
         },
@@ -161,16 +170,20 @@ export const analyzeHostPotential = async (hostsData: string, participantsData: 
 
 const callGemini = async (prompt: string): Promise<AnalysisResult> => {
     try {
-        const response = await genAI.models.generateContent({
+        // Use ai.models.generateContent to query GenAI with both the model name and prompt.
+        const response = await ai.models.generateContent({
           model: modelName,
           contents: prompt,
           config: {
             responseMimeType: "application/json",
             responseSchema: analysisSchema,
             temperature: 0.2,
+            // Complex tasks benefit from reasoning tokens.
+            thinkingConfig: { thinkingBudget: 4096 }
           },
         });
     
+        // Correctly extract text output from response.text property (not a method).
         const jsonText = response.text;
         if (!jsonText) throw new Error("No data returned from AI");
         

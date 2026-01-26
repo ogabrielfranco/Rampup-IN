@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Play, Database, CheckCircle, UserCircle, Users, Calendar, Clock, FileText } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface HostInputViewProps {
   onAnalyze: (hostsData: string, participantsData: string) => void;
@@ -52,12 +53,27 @@ const HostInputView: React.FC<HostInputViewProps> = ({ onAnalyze, isLoading, isD
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        setParticipantsText(text);
-      };
-      reader.readAsText(file);
+      const fileType = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileType === 'xlsx' || fileType === 'xls') {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const csvText = XLSX.utils.sheet_to_csv(worksheet);
+          setParticipantsText(csvText);
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const text = event.target?.result as string;
+          setParticipantsText(text);
+        };
+        reader.readAsText(file);
+      }
     }
   };
 
@@ -196,7 +212,7 @@ Horário: ${eventTime || 'N/A'}
                  <div className="relative overflow-hidden">
                     <input 
                       type="file" 
-                      accept=".csv,.txt"
+                      accept=".csv,.txt,.xlsx,.xls"
                       onChange={handleFileUpload}
                       className="absolute inset-0 opacity-0 cursor-pointer" 
                     />
